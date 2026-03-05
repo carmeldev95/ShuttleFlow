@@ -76,10 +76,11 @@ export async function issueRefreshTokenCookie(res, user) {
     revokedAt: null,
   });
 
+  const isSecure = !!env.cookie.secure;
   res.cookie(env.cookie.name, token, {
     httpOnly: true,
-    secure: !!env.cookie.secure,
-    sameSite: "lax",
+    secure: isSecure,
+    sameSite: isSecure ? "none" : "lax",
     expires: expiresAt,
     path: "/",
   });
@@ -88,10 +89,11 @@ export async function issueRefreshTokenCookie(res, user) {
 }
 
 export function clearRefreshTokenCookie(res) {
+  const isSecure = !!env.cookie.secure;
   res.clearCookie(env.cookie.name, {
     httpOnly: true,
-    secure: !!env.cookie.secure,
-    sameSite: "lax",
+    secure: isSecure,
+    sameSite: isSecure ? "none" : "lax",
     path: "/",
   });
 }

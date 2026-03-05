@@ -16,15 +16,13 @@ export function createApp() {
   app.use(express.json({ limit: "1mb" }));
   app.use(cookieParser());
 
-  // ✅ CORS: allow local dev origins (localhost/127.0.0.1 + vite ports)
-  const allowedOrigins = new Set([
-    env.clientOrigin,               // e.g. http://localhost:5173
-    "http://127.0.0.1:5173",
-    "http://localhost:5174",
-    "http://localhost:5173",
-    "http://127.0.0.1:5174",
-    "http://localhost:4173"
-  ]);
+  // ✅ CORS: allow origins from CLIENT_ORIGIN env var (comma-separated)
+  const allowedOrigins = new Set(
+    env.clientOrigin
+      .split(",")
+      .map((o) => o.trim())
+      .filter(Boolean)
+  );
 
   app.use(
     cors({
