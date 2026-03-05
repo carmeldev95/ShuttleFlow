@@ -1,0 +1,86 @@
+.container{
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.shell{
+  display:grid;
+  grid-template-columns: 260px 1fr;
+  gap: 16px;
+  min-height: 100vh;
+}
+
+.sidebar{
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 14px;
+  position: sticky;
+  top: 12px;
+  height: calc(100vh - 24px);
+
+  /* חשוב כדי שהיציאה תידבק לתחתית */
+  display: flex;
+  flex-direction: column;
+}
+
+.main{
+  padding-bottom: 24px;
+}
+
+.topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 10px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 12px 14px;
+  margin-bottom: 16px;
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  justify-content: center;
+  gap:10px;
+  font-weight: 800;
+  letter-spacing: .2px;
+}
+
+.brandDot{
+  width:12px;
+  height:12px;
+  border-radius: 4px;
+  background: var(--primary);
+}
+
+.badge{
+  font-size:12px;
+  color: var(--muted);
+  background: #f1f5f9;
+  border: 1px solid var(--border);
+  padding: 4px 8px;
+  border-radius: 999px;
+}
+.sidebar{
+  padding: 16px;
+  gap: 12px;
+}
+
+.shell{
+  gap: 18px;
+}
+
+.main{
+  padding-bottom: 40px;
+}
+
+/* Optional: add subtle background to main cards area */
+.main .card{
+  margin-bottom: 12px;
+}

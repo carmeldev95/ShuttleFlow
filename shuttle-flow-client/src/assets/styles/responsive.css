@@ -1,0 +1,15 @@
+@media (max-width: 900px){
+  .shell{
+    grid-template-columns: 1fr;
+  }
+  .sidebar{
+    position: static;
+    height: auto;
+  }
+  .grid2{
+    grid-template-columns: 1fr;
+  }
+  .kpiGrid{
+    grid-template-columns: 1fr;
+  }
+}

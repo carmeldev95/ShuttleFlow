@@ -1,0 +1,26 @@
+.table{
+  background: #fff;
+  box-shadow: var(--shadow-sm);
+  width: 100%;
+}
+
+.table tbody tr{
+  transition: background var(--transition);
+}
+
+.table tbody tr:nth-child(even){
+  background: #fbfdff;
+}
+
+.table tbody tr:hover{
+  background: #f1f7ff;
+}
+
+.table th, .table td{
+  padding: 12px 12px;
+  font-size: 13.5px;
+}
+.actions .btn{
+  padding: 8px 12px;
+  border-radius: 12px;
+}
