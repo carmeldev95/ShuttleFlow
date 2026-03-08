@@ -118,7 +118,7 @@ export default function EditEmployeePage() {
         <div style={{ marginBottom: 16 }}>
           <UserComboBox
             label="בחר עובד לעריכה"
-            users={users}
+            users={users.filter((u) => u.role !== "admin")}
             value={selectedUserId}
             onChange={onUserSelect}
           />
