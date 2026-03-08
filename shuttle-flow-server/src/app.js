@@ -12,11 +12,7 @@ import { notFound, errorHandler } from "./middleware/error.middleware.js";
 export function createApp() {
   const app = express();
 
-  app.use(helmet());
-  app.use(express.json({ limit: "1mb" }));
-  app.use(cookieParser());
-
-  // ✅ CORS: allow origins from CLIENT_ORIGIN env var (comma-separated)
+  // ✅ CORS first — headers set before anything can throw
   const allowedOrigins = new Set(
     env.clientOrigin
       .split(",")
@@ -38,6 +34,10 @@ export function createApp() {
       optionsSuccessStatus: 204,
     })
   );
+
+  app.use(helmet());
+  app.use(express.json({ limit: "1mb" }));
+  app.use(cookieParser());
 
   // logs
   app.use(
