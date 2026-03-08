@@ -10,7 +10,11 @@ export async function connectDb() {
 
   if (!cached.promise) {
     cached.promise = mongoose
-      .connect(env.mongoUri, { dbName: "shuttleflow" })
+      .connect(env.mongoUri, {
+        dbName: "shuttleflow",
+        serverSelectionTimeoutMS: 10000,
+        socketTimeoutMS: 20000,
+      })
       .then((m) => m);
   }
 
