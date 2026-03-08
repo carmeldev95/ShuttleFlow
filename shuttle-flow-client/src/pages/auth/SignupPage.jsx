@@ -63,7 +63,7 @@ export default function SignupPage() {
 
     try {
       setLoading(true);
-      await signup(payload);               // ✅ חשוב
+      await signup(payload);              
       nav("/", { replace: true });
     } catch (err) {
       setError(err.message || "שגיאה בהרשמה");
@@ -97,7 +97,7 @@ export default function SignupPage() {
             </div>
 
             <Input
-              label=" כתובת מגורים(עיר ,רחוב , מספר בית)"
+              label=" כתובת מגורים (עיר ,רחוב , מספר בית)"
               value={form.address}
               onChange={(e) => setField("address", e.target.value)}
               error={errors.address}

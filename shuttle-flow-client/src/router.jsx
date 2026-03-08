@@ -12,6 +12,7 @@ import MyRegistrationsPage from "../src/pages/employee/MyRegistrationPage.jsx";
 
 import AdminRegistrationsPage from "../src/pages/admin/AdminRegistrationsPage.jsx";
 import ReportsPage from "../src/pages/admin/ReportsPage.jsx";
+import EditEmployeePage from "../src/pages/admin/EditEmployeePage.jsx";
 
 import { getSession } from "../src/services/auth.service.js";
 
@@ -59,6 +60,14 @@ export const router = createBrowserRouter([
         element: (
           <RoleRoute role="admin">
             <ReportsPage />
+          </RoleRoute>
+        ),
+      },
+      {
+        path: "employees",
+        element: (
+          <RoleRoute role="admin">
+            <EditEmployeePage />
           </RoleRoute>
         ),
       },

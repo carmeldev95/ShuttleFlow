@@ -9,6 +9,7 @@ export default function LoginPage() {
     const nav = useNavigate();
     const [form, setForm] = useState({ phone: "", password: "" });
     const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
 
     function setField(k, v) {
         setForm((x) => ({ ...x, [k]: v }));
@@ -17,11 +18,14 @@ export default function LoginPage() {
    async function submit(e) {
         e.preventDefault();
         setError("");
+        setLoading(true);
         try {
-            login(form);
+            await login(form);
             nav("/", { replace: true });
         } catch (err) {
             setError(err.message || "שגיאה בהתחברות");
+        } finally {
+            setLoading(false);
         }
     }
 
@@ -50,8 +54,8 @@ export default function LoginPage() {
                             placeholder="••••••••"
                         />
 
-                        <Button variant="primary" type="submit">
-                            התחבר
+                        <Button variant="primary" type="submit" disabled={loading}>
+                            {loading ? "מתחבר..." : "התחבר"}
                         </Button>
 
                         <div className="p" style={{ marginTop: 6 }}>

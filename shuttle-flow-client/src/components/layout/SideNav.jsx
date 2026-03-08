@@ -35,6 +35,9 @@ export default function SideNav({ role, toast }) {
             <NavLink className={linkClass} to="/admin">
               ניהול רישומים
             </NavLink>
+            <NavLink className={linkClass} to="/employees">
+              עריכת עובדים
+            </NavLink>
             <NavLink className={linkClass} to="/reports">
               דוחות
             </NavLink>
