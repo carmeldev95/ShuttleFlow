@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { login, logout, me, refresh, signup } from "../controllers/auth.controller.js";
+import { login, logout, me, refresh, signup, changePassword } from "../controllers/auth.controller.js";
 import { requireAuth } from "../middleware/auth.middleware.js";
 import { authRateLimit } from "../middleware/rateLimit.middleware.js";
 
@@ -13,3 +13,4 @@ authRoutes.post("/refresh", authRateLimit, refresh);
 authRoutes.post("/logout", authRateLimit, logout);
 
 authRoutes.get("/me", requireAuth, me);
+authRoutes.post("/change-password", requireAuth, changePassword);

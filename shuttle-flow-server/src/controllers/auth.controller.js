@@ -129,3 +129,25 @@ export async function refresh(req, res, next) {
 export async function me(req, res) {
   res.json({ user: req.user });
 }
+
+/**
+ * POST /api/auth/change-password
+ * Requires auth. Used when mustChangePassword=true.
+ */
+export async function changePassword(req, res) {
+  const { newPassword } = req.body;
+
+  if (!newPassword) throw new AppError("חובה להזין סיסמה חדשה", 400);
+  if (newPassword.length < 6) throw new AppError("סיסמה חייבת להכיל לפחות 6 תווים", 400);
+  if (!/^[a-zA-Z0-9]+$/.test(newPassword))
+    throw new AppError("סיסמה יכולה להכיל אותיות באנגלית ומספרים בלבד", 400);
+
+  const user = await User.findById(req.user.id).select("+passwordHash");
+  if (!user) throw new AppError("משתמש לא נמצא", 404);
+
+  await user.setPassword(newPassword);
+  user.mustChangePassword = false;
+  await user.save();
+
+  res.json({ user: user.toSafeJson() });
+}

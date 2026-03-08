@@ -39,7 +39,10 @@ export const updateUser = asyncHandler(async (req, res) => {
   if (department) user.department = department.trim();
   if (address) user.address = address.trim();
   if (role && ["employee", "admin"].includes(role)) user.role = role;
-  if (password && password.length >= 6) await user.setPassword(password);
+  if (password && password.length >= 6) {
+    await user.setPassword(password);
+    user.mustChangePassword = true;
+  }
 
   await user.save();
   res.json({ user: user.toSafeJson() });

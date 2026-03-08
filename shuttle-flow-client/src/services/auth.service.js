@@ -53,3 +53,10 @@ export async function me() {
   if (cur?.token && data?.user) setSession({ token: cur.token, user: data.user });
   return data.user;
 }
+
+export async function changePassword(newPassword) {
+  const data = await apiRequest("/auth/change-password", { method: "POST", body: { newPassword } });
+  const cur = getSession();
+  if (cur) setSession({ ...cur, user: data.user });
+  return data.user;
+}

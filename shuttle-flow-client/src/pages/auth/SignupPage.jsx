@@ -6,7 +6,7 @@ import { Input } from "../../components/ui/Input.jsx";
 import { Select } from "../../components/ui/Select.jsx";
 import { departments } from "../../data/departments.js";
 import { signup } from "../../services/auth.service.js";
-import { required, validatePhone } from "../../utils/validators.js";
+import { required, validatePhone, validatePassword } from "../../utils/validators.js";
 import Brand from "../../components/ui/Brand.jsx";
 
 export default function SignupPage() {
@@ -37,7 +37,7 @@ export default function SignupPage() {
     e.lastName = required(form.lastName, "חובה למלא שם משפחה");
     e.address = required(form.address, "חובה למלא כתובת");
     e.department = required(form.department, "חובה לבחור מחלקה");
-    e.password = required(form.password, "חובה למלא סיסמה");
+    e.password = validatePassword(form.password);
 
     const phoneErr = validatePhone(form.phone);
     if (phoneErr) e.phone = phoneErr;

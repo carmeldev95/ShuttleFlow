@@ -7,7 +7,7 @@ import { Select } from "../../components/ui/Select.jsx";
 import UserComboBox from "../../components/ui/UserComboBox.jsx";
 import { listUsers, updateUser } from "../../services/users.service.js";
 import { departments } from "../../data/departments.js";
-import { required, validatePhone } from "../../utils/validators.js";
+import { required, validatePhone, validatePassword } from "../../utils/validators.js";
 
 const EMPTY_FORM = {
   firstName: "",
@@ -68,8 +68,8 @@ export default function EditEmployeePage() {
     e.department = required(form.department, "חובה לבחור מחלקה");
     const phoneErr = validatePhone(form.phone);
     if (phoneErr) e.phone = phoneErr;
-    if (form.password && form.password.length < 6) {
-      e.password = "סיסמה חייבת להכיל לפחות 6 תווים";
+    if (form.password) {
+      e.password = validatePassword(form.password);
     }
     Object.keys(e).forEach((k) => e[k] == null && delete e[k]);
     setErrors(e);

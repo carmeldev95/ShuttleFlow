@@ -1,11 +1,15 @@
+import { useState } from "react";
 import { Outlet } from "react-router-dom";
 import SideNav from "./SideNav.jsx";
 import Toast from "../ui/Toast.jsx";
+import ChangePasswordModal from "../ui/ChangePasswordModal.jsx";
 import { useToast } from "../../hooks/useToast.js";
 import { getSession } from "../../services/auth.service.js";
 import Brand from "../ui/Brand.jsx";
 
 export default function AppShell() {
+  const [, setTick] = useState(0);
+  const refresh = () => setTick((t) => t + 1);
   const session = getSession();
   const toast = useToast();
 
@@ -35,6 +39,10 @@ export default function AppShell() {
       </div>
 
       <Toast toasts={toast.toasts} />
+
+      {user.mustChangePassword && (
+        <ChangePasswordModal onSuccess={refresh} toast={toast} />
+      )}
     </>
   );
 }

@@ -19,6 +19,8 @@ const userSchema = new mongoose.Schema(
 
     role: { type: String, enum: ["employee", "admin"], default: "employee" },
 
+    mustChangePassword: { type: Boolean, default: false },
+
     passwordHash: { type: String, required: true, select: false },
   },
   { timestamps: true }
@@ -47,6 +49,7 @@ userSchema.methods.toSafeJson = function () {
     department: this.department,
     address: this.address,
     role: this.role,
+    mustChangePassword: this.mustChangePassword ?? false,
   };
 };
 

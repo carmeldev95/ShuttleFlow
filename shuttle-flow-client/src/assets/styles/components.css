@@ -570,13 +570,18 @@
 .modalOverlay{
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, .45);
+  background: rgba(15, 23, 42, .75);
   display: grid;
   place-items: center;
   z-index: 1200;
   padding: 16px;
 }
 
+.modalBox{
+  background-color: white;
+  padding: 20px;
+  border-radius: 5px;
+}
 .modalCard{
   width: min(520px, 100%);
   background: #fff;
