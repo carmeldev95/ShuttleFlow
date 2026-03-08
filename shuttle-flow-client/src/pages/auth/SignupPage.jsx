@@ -97,7 +97,7 @@ export default function SignupPage() {
             </div>
 
             <Input
-              label="כתובת מגורים"
+              label=" כתובת מגורים(עיר ,רחוב , מספר בית)"
               value={form.address}
               onChange={(e) => setField("address", e.target.value)}
               error={errors.address}
