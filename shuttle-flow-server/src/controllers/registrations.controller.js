@@ -2,6 +2,7 @@
 import { Registration } from "../models/Registration.js";
 import { User } from "../models/User.js";
 import { AppError } from "../utils/errors.js";
+import { encryptField, decryptField } from "../utils/cryptoFields.js";
 
 const ALLOWED_SHIFTS = ["morning", "evening", "night"];
 const ALLOWED_DIRECTIONS = ["pickup", "dropoff", "both"];
@@ -18,11 +19,19 @@ function mapMongoError(e) {
 
 function toRow(doc) {
   if (!doc) return doc;
+  const snap = doc.userSnapshot || {};
   return {
     ...doc,
     id: String(doc._id),
     userId: String(doc.userId),
     createdBy: String(doc.createdBy),
+    userSnapshot: {
+      firstName:  decryptField(snap.firstName),
+      lastName:   decryptField(snap.lastName),
+      phone:      decryptField(snap.phone),
+      address:    decryptField(snap.address),
+      department: decryptField(snap.department),
+    },
   };
 }
 
@@ -69,12 +78,13 @@ export async function createRegistration(req, res, next) {
       throw new AppError("שדות לא תקינים (בדוק משמרת/סוג/מיקום)", 400);
     }
 
+    // req.user is already decrypted (from toSafeJson in middleware)
     const snap = {
-      firstName: req.user.firstName,
-      lastName: req.user.lastName,
-      phone: req.user.phone,
-      address: req.user.address,
-      department: req.user.department,
+      firstName:  encryptField(req.user.firstName),
+      lastName:   encryptField(req.user.lastName),
+      phone:      encryptField(req.user.phone),
+      address:    encryptField(req.user.address),
+      department: encryptField(req.user.department),
     };
 
     const doc = await Registration.create({
@@ -115,15 +125,16 @@ export async function adminCreateRegistration(req, res, next) {
       throw new AppError("שדות לא תקינים (בדוק משמרת/סוג/מיקום)", 400);
     }
 
-    const target = await User.findById(userId).lean();
+    const target = await User.findById(userId);
     if (!target) throw new AppError("User not found", 404);
+    const safeTarget = target.toSafeJson();
 
     const snap = {
-      firstName: target.firstName,
-      lastName: target.lastName,
-      phone: target.phone,
-      address: target.address,
-      department: target.department,
+      firstName:  encryptField(safeTarget.firstName),
+      lastName:   encryptField(safeTarget.lastName),
+      phone:      encryptField(safeTarget.phone),
+      address:    encryptField(safeTarget.address),
+      department: encryptField(safeTarget.department),
     };
 
     const doc = await Registration.create({

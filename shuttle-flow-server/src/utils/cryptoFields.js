@@ -22,7 +22,10 @@ export function encryptField(plainText) {
 
 export function decryptField(payload) {
   if (!payload) return "";
+  // Legacy: plain string stored before encryption was enabled
+  if (typeof payload === "string") return payload;
   const { ct, iv, tag } = payload;
+  if (!ct || !iv || !tag) return "";
 
   const decipher = crypto.createDecipheriv(
     "aes-256-gcm",
@@ -37,6 +40,11 @@ export function decryptField(payload) {
   ]);
 
   return plain.toString("utf8");
+}
+
+// Deterministic HMAC for lookup (e.g. phone index)
+export function hmacField(value) {
+  return crypto.createHmac("sha256", KEY).update(String(value)).digest("hex");
 }
 
 // helper for mongoose schema type

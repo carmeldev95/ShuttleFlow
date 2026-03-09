@@ -1,21 +1,17 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
+import { encryptField, decryptField, hmacField } from "../utils/cryptoFields.js";
 
 const userSchema = new mongoose.Schema(
   {
-    firstName: { type: String, required: true, trim: true, maxlength: 60 },
-    lastName: { type: String, required: true, trim: true, maxlength: 60 },
+    firstName:  { type: mongoose.Schema.Types.Mixed, required: true },
+    lastName:   { type: mongoose.Schema.Types.Mixed, required: true },
 
-    phone: {
-      type: String,
-      required: true,
-      unique: true,
-      index: true,
-      trim: true,
-    },
+    phone:      { type: mongoose.Schema.Types.Mixed, required: true },
+    phoneHash:  { type: String, unique: true, index: true, select: false },
 
-    department: { type: String, required: true, trim: true, maxlength: 120 },
-    address: { type: String, required: true, trim: true, maxlength: 240 },
+    department: { type: mongoose.Schema.Types.Mixed, required: true },
+    address:    { type: mongoose.Schema.Types.Mixed, required: true },
 
     role: { type: String, enum: ["employee", "admin"], default: "employee" },
 
@@ -26,9 +22,18 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Normalize phone digits on save
+// Encrypt PII fields + compute phoneHash before save
 userSchema.pre("save", function (next) {
-  if (this.phone) this.phone = String(this.phone).replace(/[^\d]/g, "");
+  for (const field of ["firstName", "lastName", "department", "address"]) {
+    if (typeof this[field] === "string") {
+      this[field] = encryptField(this[field]);
+    }
+  }
+  if (typeof this.phone === "string") {
+    const normalized = this.phone.replace(/\D/g, "");
+    this.phoneHash = hmacField(normalized);
+    this.phone = encryptField(normalized);
+  }
   next();
 });
 
@@ -43,12 +48,12 @@ userSchema.methods.checkPassword = async function (plain) {
 userSchema.methods.toSafeJson = function () {
   return {
     id: String(this._id),
-    firstName: this.firstName,
-    lastName: this.lastName,
-    phone: this.phone,
-    department: this.department,
-    address: this.address,
-    role: this.role,
+    firstName:          decryptField(this.firstName),
+    lastName:           decryptField(this.lastName),
+    phone:              decryptField(this.phone),
+    department:         decryptField(this.department),
+    address:            decryptField(this.address),
+    role:               this.role,
     mustChangePassword: this.mustChangePassword ?? false,
   };
 };

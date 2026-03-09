@@ -2,6 +2,7 @@
 import "dotenv/config";
 import mongoose from "mongoose";
 import { User } from "../models/User.js";
+import { hmacField } from "../utils/cryptoFields.js";
 
 function normPhone(v) {
   const digits = String(v ?? "").replace(/[^\d]/g, "");
@@ -9,10 +10,10 @@ function normPhone(v) {
   return digits || "";
 }
 
-const PHONE = normPhone(process.env.SEED_ADMIN_PHONE || "0500000000");
-const PASSWORD = String(process.env.SEED_ADMIN_PASSWORD || "Admin12345!");
+const PHONE = normPhone(process.env.SEED_ADMIN_PHONE || "1111111111");
+const PASSWORD = String(process.env.SEED_ADMIN_PASSWORD || "Admin123");
 const FIRST_NAME = String(process.env.SEED_ADMIN_FIRSTNAME || "מנהל");
-const LAST_NAME = String(process.env.SEED_ADMIN_LASTNAME || "מערכת");
+const LAST_NAME = String(process.env.SEED_ADMIN_LASTNAME || "3 מערכת");
 const ADDRESS = String(process.env.SEED_ADMIN_ADDRESS || "N/A");
 const DEPARTMENT = String(process.env.SEED_ADMIN_DEPARTMENT || "Admin");
 
@@ -24,7 +25,7 @@ async function main() {
   await mongoose.connect(process.env.MONGO_URI);
 
   // מצא את כל המשתמשים עם אותו phone (למקרה שנוצרו כפילויות בעבר)
-  const candidates = await User.find({ phone: PHONE }).select("+passwordHash");
+  const candidates = await User.find({ phoneHash: hmacField(PHONE) }).select("+passwordHash +phoneHash");
   if (candidates.length > 1) {
     console.warn(`⚠️ Found ${candidates.length} users with same phone (${PHONE}).`);
     console.warn("   Using the newest as primary. (No deletion performed)");

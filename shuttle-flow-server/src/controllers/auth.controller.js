@@ -3,6 +3,7 @@ import { User } from "../models/User.js";
 import { AppError } from "../utils/errors.js";
 import { normalizePhone } from "../utils/pick.js";
 import { env } from "../config/env.js";
+import { hmacField } from "../utils/cryptoFields.js";
 
 import {
   createAccessToken,
@@ -45,7 +46,7 @@ export async function signup(req, res) {
   const pass = String(password || "");
   if (pass.length < 6) throw new AppError("סיסמה קצרה מדי (מינימום 6 תווים)", 400);
 
-  const exists = await User.findOne({ phone: ph });
+  const exists = await User.findOne({ phoneHash: hmacField(ph) });
   if (exists) throw new AppError("הטלפון כבר רשום במערכת", 409);
 
   const user = new User({
@@ -79,7 +80,7 @@ export async function login(req, res) {
   const ph = normalizePhone(phone);
   if (!ph) throw new AppError("מספר טלפון לא תקין", 400);
 
-  const user = await User.findOne({ phone: ph }).select("+passwordHash");
+  const user = await User.findOne({ phoneHash: hmacField(ph) }).select("+passwordHash +phoneHash");
   if (!user) throw new AppError("Invalid credentials", 401);
 
   const ok = await user.checkPassword(password);

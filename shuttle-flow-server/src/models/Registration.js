@@ -11,13 +11,13 @@ const RegistrationSchema = new mongoose.Schema(
     direction: { type: String, enum: ["pickup", "dropoff", "both"], required: true },
     site: { type: String, enum: ["carmel", "rambam"], required: true },
 
-    // snapshot for reports/history
+    // snapshot for reports/history (fields stored encrypted)
     userSnapshot: {
-      firstName: String,
-      lastName: String,
-      phone: String,
-      address: String,
-      department: String,
+      firstName:  { type: mongoose.Schema.Types.Mixed },
+      lastName:   { type: mongoose.Schema.Types.Mixed },
+      phone:      { type: mongoose.Schema.Types.Mixed },
+      address:    { type: mongoose.Schema.Types.Mixed },
+      department: { type: mongoose.Schema.Types.Mixed },
     },
 
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
