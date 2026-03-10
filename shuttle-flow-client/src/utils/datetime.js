@@ -34,3 +34,14 @@ export function formatDate(dateStr) {
 
   return `${day}-${month}-${year}`;
 }
+
+export function formatTimestamp(isoStr) {
+  if (!isoStr) return "";
+  const d = new Date(isoStr);
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const year = d.getFullYear();
+  return `${hh}:${mm}\n${day}-${month}-${year}`;
+}

@@ -2,7 +2,7 @@
 import { useMemo, useState } from "react";
 import Button from "../ui/Button.jsx";
 import { canEditRegistration } from "../../utils/rules.js";
-import { formatDate } from "../../utils/datetime.js";
+import { formatDate, formatTimestamp } from "../../utils/datetime.js";
 
 function SortIcon({ dir }) {
   if (!dir) return <span className="sortIcon sortIcon--off">↕</span>;
@@ -120,6 +120,7 @@ export default function RegistrationTable({
             <th className="colAddress thSortable" onClick={() => toggleSort("address")} role="button">
               כתובת <SortIcon dir={sortDirFor("address")} />
             </th>
+            {mode === "admin" && <th className="colTimestamp">נוצר</th>}
             <th className="colActions">פעולות</th>
           </tr>
         </thead>
@@ -146,6 +147,12 @@ export default function RegistrationTable({
                 </td>
                 <td className="colPhone">{r.userSnapshot?.phone || "-"}</td>
                 <td className="colAddress">{r.userSnapshot?.address || "-"}</td>
+
+                {mode === "admin" && (
+                  <td className="colTimestamp" style={{ whiteSpace: "pre", fontSize: "0.8rem" }}>
+                    {formatTimestamp(r.createdAt)}
+                  </td>
+                )}
 
                 <td className="colActions" onClick={(e) => e.stopPropagation()}>
                   <div className="actions">
@@ -174,7 +181,7 @@ export default function RegistrationTable({
 
           {pageRows.length === 0 && (
             <tr>
-              <td colSpan={8} className="tableEmpty">
+              <td colSpan={mode === "admin" ? 9 : 8} className="tableEmpty">
                 אין נתונים להצגה
               </td>
             </tr>
