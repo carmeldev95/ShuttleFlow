@@ -12,7 +12,7 @@ import {
 } from "../../utils/constants.js";
 import { formatYmd } from "../../utils/datetime.js";
 import { getSession } from "../../services/auth.service.js";
-import { canEditRegistration } from "../../utils/rules.js";
+import { canEditRegistration, getDeadlineHint } from "../../utils/rules.js";
 
 export default function RegistrationForm({
     mode = "create", // create | edit
@@ -85,10 +85,11 @@ export default function RegistrationForm({
     return (
         <form className="form" onSubmit={submit}>
             {topReason && <div className="notice noticeDanger">{topReason}</div>}
-            <div className="notice">
-                כללי שינוי: <b>איסוף ערב</b> ו-<b>פיזור בוקר</b> עד 10:00 · <b>לילה</b> +{" "}
-                <b>איסוף בוקר למחרת</b> עד 16:00 · אחרי מועד ההסעה נעול.
-            </div>
+            {!isAdmin && (
+                <div className="notice">
+                    {getDeadlineHint(form.shift, form.direction)}
+                </div>
+            )}
 
             <div className="grid2">
                 <Input

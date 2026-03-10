@@ -3,6 +3,7 @@ import { Registration } from "../models/Registration.js";
 import { User } from "../models/User.js";
 import { AppError } from "../utils/errors.js";
 import { encryptField, decryptField } from "../utils/cryptoFields.js";
+import { canEditRegistrationServer } from "../utils/timeRules.js";
 
 const ALLOWED_SHIFTS = ["morning", "evening", "night"];
 const ALLOWED_DIRECTIONS = ["pickup", "dropoff", "both"];
@@ -76,6 +77,12 @@ export async function createRegistration(req, res, next) {
 
     if (!ALLOWED_SHIFTS.includes(s) || !ALLOWED_DIRECTIONS.includes(d) || !ALLOWED_SITES.includes(si)) {
       throw new AppError("שדות לא תקינים (בדוק משמרת/סוג/מיקום)", 400);
+    }
+
+    const isAdmin = req.user?.role === "admin";
+    if (!isAdmin) {
+      const check = canEditRegistrationServer({ date: String(date).trim(), direction: d });
+      if (!check.ok) throw new AppError(check.reason, 403);
     }
 
     // req.user is already decrypted (from toSafeJson in middleware)
@@ -167,6 +174,11 @@ export async function updateRegistration(req, res, next) {
 
     const isAdmin = req.user?.role === "admin";
     if (!isAdmin && String(r.userId) !== String(req.user.id)) throw new AppError("Forbidden", 403);
+
+    if (!isAdmin) {
+      const check = canEditRegistrationServer(r);
+      if (!check.ok) throw new AppError(check.reason, 403);
+    }
 
     const allowed = ["date", "shift", "direction", "site"];
     for (const k of allowed) {
