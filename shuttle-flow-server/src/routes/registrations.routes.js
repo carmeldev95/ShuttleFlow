@@ -8,20 +8,14 @@ import {
   updateRegistration,
   deleteRegistration,
 } from "../controllers/registrations.controller.js";
+import { ah } from "../utils/asyncHandler.js";
 
 export const registrationsRoutes = Router();
 
 registrationsRoutes.use(requireAuth);
 
-// list (admin: all, employee: only mine) + supports ?date=YYYY-MM-DD&shift=morning|evening|night
-registrationsRoutes.get("/", listRegistrations);
-
-// employee create for self
-registrationsRoutes.post("/", createRegistration);
-
-// admin create for specific user
-registrationsRoutes.post("/admin", requireAdmin, adminCreateRegistration);
-
-// update/delete (admin or owner)
-registrationsRoutes.patch("/:id", updateRegistration);
-registrationsRoutes.delete("/:id", deleteRegistration);
+registrationsRoutes.get("/", ah(listRegistrations));
+registrationsRoutes.post("/", ah(createRegistration));
+registrationsRoutes.post("/admin", requireAdmin, ah(adminCreateRegistration));
+registrationsRoutes.patch("/:id", ah(updateRegistration));
+registrationsRoutes.delete("/:id", ah(deleteRegistration));

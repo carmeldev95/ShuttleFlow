@@ -23,7 +23,7 @@ export default function LoginPage() {
             await login(form);
             nav("/", { replace: true });
         } catch (err) {
-            setError(err.message || "שגיאה בהתחברות");
+            setError(err.status === 401 ? "שגיאה באחד מפרטי ההתחברות, נסה שנית" : err.message || "שגיאה בהתחברות");
         } finally {
             setLoading(false);
         }
