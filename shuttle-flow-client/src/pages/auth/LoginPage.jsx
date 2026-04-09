@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Card from "../../components/ui/Card.jsx";
 import Button from "../../components/ui/Button.jsx";
 import { Input } from "../../components/ui/Input.jsx";
@@ -58,12 +58,8 @@ export default function LoginPage() {
                             {loading ? "מתחבר..." : "התחבר"}
                         </Button>
 
-                        <div className="p" style={{ marginTop: 6 }}>
-                            אין לך משתמש? <Link to="/signup" style={{ color: "var(--primary)", fontWeight: 700 }}>הרשמה</Link>
-                        </div>
-
-                        <div className="notice" style={{ marginTop: 8 }}>
-                            השימוש במערכת הינה עבור עובדי בית חולים כרמל שאין להם גישה למערכת ההיסעים.
+                        <div className="notice noticeWarning" style={{ marginTop: 8, fontWeight: 700 }}>
+                            שימו לב — ההרשמה במערכת מיועדת כעת לעובדים ברמב״ם בלבד!
                         </div>
                     </form>
                 </Card>

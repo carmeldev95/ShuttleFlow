@@ -30,7 +30,7 @@ export default function RegistrationForm({
         date: initial?.date || todayYmd,
         shift: initial?.shift || SHIFT.MORNING,
         direction: initial?.direction || DIRECTION.PICKUP,
-        site: initial?.site || SITE.CARMEL,
+        site: initial?.site || SITE.RAMBAM,
     }));
 
     const [errors, setErrors] = useState({});
@@ -138,7 +138,7 @@ export default function RegistrationForm({
                     error={errors.site}
                     disabled={!!disabledReason}
                 >
-                    {Object.values(SITE).map((k) => (
+                    {Object.values(SITE).filter((k) => k !== SITE.CARMEL).map((k) => (
                         <option key={k} value={k}>
                             {SITE_LABEL[k]}
                         </option>

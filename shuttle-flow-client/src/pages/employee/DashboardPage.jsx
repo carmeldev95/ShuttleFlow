@@ -6,7 +6,7 @@ import Button from "../../components/ui/Button.jsx";
 import { getSession } from "../../services/auth.service.js";
 import { listRegistrations } from "../../services/registrations.service.js";
 
-import { SHIFT_LABEL, DIRECTION_LABEL, SITE_LABEL } from "../../utils/constants.js";
+import { DIRECTION_LABEL, SITE_LABEL } from "../../utils/constants.js";
 import RegistrationCards from "../../components/shuttle/RegistrationCards.jsx";
 import { formatDate } from "../../utils/datetime.js";
 
@@ -61,6 +61,12 @@ export default function DashboardPage() {
   if (!user) return null;
 
   const isAdmin = user.role === "admin";
+
+  const [showNotice, setShowNotice] = useState(!isAdmin);
+
+  function closeNotice() {
+    setShowNotice(false);
+  }
 
   const [all, setAll] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -139,6 +145,26 @@ export default function DashboardPage() {
 
   return (
     <>
+      {showNotice && (
+        <div className="modalOverlay" onClick={closeNotice}>
+          <div className="modalBox modalCard" onClick={(e) => e.stopPropagation()}>
+            <div className="modalTitle" style={{ fontSize: 18, marginBottom: 12 }}>
+              📢 הודעה חשובה
+            </div>
+            <div style={{ fontSize: 15, lineHeight: 1.7, color: "var(--text)" }}>
+              <strong>ההרשמה להסעות במערכת מיועדת כעת לעובדים ברמב״ם בלבד!</strong>
+              <br />
+              רק עובדי רמב״ם יכולים להירשם להסעות בשלב זה.
+            </div>
+            <div className="modalActions" style={{ marginTop: 20 }}>
+              <button className="btn btnPrimary" onClick={closeNotice}>
+                הבנתי, סגור
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <Card
         title="דשבורד"
         subtitle={isAdmin ? "ניהול מהיר של רישומי העובדים" : "ניהול מהיר של ההסעות שלך"}
