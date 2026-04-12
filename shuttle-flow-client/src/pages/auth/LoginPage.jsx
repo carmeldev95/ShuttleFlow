@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Card from "../../components/ui/Card.jsx";
 import Button from "../../components/ui/Button.jsx";
 import { Input } from "../../components/ui/Input.jsx";
@@ -57,6 +57,10 @@ export default function LoginPage() {
                         <Button variant="primary" type="submit" disabled={loading}>
                             {loading ? "מתחבר..." : "התחבר"}
                         </Button>
+
+                        <div className="p" style={{ marginTop: 6 }}>
+                            אין לך משתמש? <Link to="/signup" style={{ color: "var(--primary)", fontWeight: 700 }}>הרשמה</Link>
+                        </div>
 
                         <div className="notice noticeWarning" style={{ marginTop: 8, fontWeight: 700 }}>
                             שימו לב — ההרשמה במערכת מיועדת כעת לעובדים ברמב״ם בלבד!
