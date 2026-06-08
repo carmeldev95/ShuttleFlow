@@ -16,6 +16,8 @@ import {
   listRegistrations,
   updateRegistration,
 } from "../../services/registrations.service.js";
+import { listSiteConfigs } from "../../services/siteConfig.service.js";
+import SiteConfigModal from "../../components/shuttle/SiteConfigModal.jsx";
 
 function ConfirmModal({
   open,
@@ -92,6 +94,8 @@ export default function AdminRegistrationsPage() {
   const [loadingRows, setLoadingRows] = useState(false);
 
   const [refresh, setRefresh] = useState(0);
+  const [siteConfigs, setSiteConfigs] = useState([]);
+  const [showSiteConfig, setShowSiteConfig] = useState(false);
 
   const [confirm, setConfirm] = useState({
     open: false,
@@ -119,6 +123,7 @@ export default function AdminRegistrationsPage() {
     }
 
     if (isAdmin) loadUsers();
+    listSiteConfigs().then(setSiteConfigs).catch(() => {});
     return () => {
       cancelled = true;
     };
@@ -251,20 +256,36 @@ export default function AdminRegistrationsPage() {
         onConfirm={() => confirm.action?.()}
       />
 
+      {showSiteConfig && (
+        <SiteConfigModal
+          onClose={() => setShowSiteConfig(false)}
+          onChanged={() => listSiteConfigs().then(setSiteConfigs).catch(() => {})}
+        />
+      )}
+
       <Card
         title="ניהול רישומים"
         subtitle="צפייה, עריכה וביטול רישומי עובדים (לאדמין אין נעילה)"
         right={
-          <button
-            className="btn btnPrimary"
-            type="button"
-            onClick={() => {
-              setCreateMode((x) => !x);
-              setEditing(null);
-            }}
-          >
-            {createMode ? "סגור" : "הוסף רישום"}
-          </button>
+          <div className="row" style={{ gap: 8 }}>
+            <button
+              className="btn btnGhost"
+              type="button"
+              onClick={() => setShowSiteConfig(true)}
+            >
+              ניהול משמרות ומיקומים
+            </button>
+            <button
+              className="btn btnPrimary"
+              type="button"
+              onClick={() => {
+                setCreateMode((x) => !x);
+                setEditing(null);
+              }}
+            >
+              {createMode ? "סגור" : "הוסף רישום"}
+            </button>
+          </div>
         }
       >
         {createMode && (
@@ -281,7 +302,7 @@ export default function AdminRegistrationsPage() {
             />
 
             <div className="hr" />
-            <RegistrationForm onSubmit={onCreate} submitLabel="צור רישום" />
+            <RegistrationForm onSubmit={onCreate} submitLabel="צור רישום" siteConfigs={siteConfigs} />
             <div className="hr" />
           </>
         )}
@@ -299,6 +320,7 @@ export default function AdminRegistrationsPage() {
               onCancel={() => setEditing(null)}
               submitLabel="שמור"
               disabledReason=""
+              siteConfigs={siteConfigs}
             />
 
             <div className="hr" />

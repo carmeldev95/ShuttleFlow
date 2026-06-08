@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import Card from "../../components/ui/Card.jsx";
 import Button from "../../components/ui/Button.jsx";
 import { Input } from "../../components/ui/Input.jsx";
-import { Select } from "../../components/ui/Select.jsx";
+import DepartmentComboBox from "../../components/ui/DepartmentComboBox.jsx";
 import { departments } from "../../data/departments.js";
 import { signup } from "../../services/auth.service.js";
 import { required, validatePhone, validatePassword } from "../../utils/validators.js";
@@ -112,18 +112,12 @@ export default function SignupPage() {
                 placeholder="05XXXXXXXX"
                 autoComplete="tel"
               />
-              <Select
-                label="מחלקה"
+              <DepartmentComboBox
+                options={deps}
                 value={form.department}
-                onChange={(e) => setField("department", e.target.value)}
+                onChange={(v) => setField("department", v)}
                 error={errors.department}
-              >
-                {deps.map((d) => (
-                  <option key={d} value={d}>
-                    {d}
-                  </option>
-                ))}
-              </Select>
+              />
             </div>
 
             <Input

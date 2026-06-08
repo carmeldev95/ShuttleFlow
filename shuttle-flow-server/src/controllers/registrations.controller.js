@@ -1,13 +1,30 @@
 // src/controllers/registrations.controller.js
 import { Registration } from "../models/Registration.js";
 import { User } from "../models/User.js";
+import { SiteConfig } from "../models/SiteConfig.js";
 import { AppError } from "../utils/errors.js";
 import { encryptField, decryptField } from "../utils/cryptoFields.js";
 import { canEditRegistrationServer } from "../utils/timeRules.js";
 
 const ALLOWED_SHIFTS = ["morning", "evening", "night"];
 const ALLOWED_DIRECTIONS = ["pickup", "dropoff", "both"];
-const ALLOWED_SITES = ["carmel", "rambam"];
+const FALLBACK_SITES = ["carmel", "rambam"];
+
+async function validateSite(siteKey, shiftKey, isAdmin) {
+  const siteDoc = await SiteConfig.findOne({ key: siteKey }).lean();
+  if (!siteDoc) {
+    // fallback: allow legacy sites if SiteConfig collection is empty
+    const count = await SiteConfig.countDocuments();
+    if (count === 0 && FALLBACK_SITES.includes(siteKey)) return;
+    throw new AppError("מיקום לא תקין", 400);
+  }
+  if (!isAdmin) {
+    if (!siteDoc.isVisible) throw new AppError("מיקום זה אינו זמין להרשמה", 403);
+    if (shiftKey && siteDoc.shifts?.[shiftKey] === false) {
+      throw new AppError(`משמרת ${shiftKey} אינה זמינה במיקום זה`, 403);
+    }
+  }
+}
 
 const norm = (v) => String(v ?? "").trim().toLowerCase();
 
@@ -75,11 +92,13 @@ export async function createRegistration(req, res, next) {
     const d = norm(direction);
     const si = norm(site);
 
-    if (!ALLOWED_SHIFTS.includes(s) || !ALLOWED_DIRECTIONS.includes(d) || !ALLOWED_SITES.includes(si)) {
-      throw new AppError("שדות לא תקינים (בדוק משמרת/סוג/מיקום)", 400);
+    if (!ALLOWED_SHIFTS.includes(s) || !ALLOWED_DIRECTIONS.includes(d)) {
+      throw new AppError("שדות לא תקינים (בדוק משמרת/סוג)", 400);
     }
 
     const isAdmin = req.user?.role === "admin";
+    await validateSite(si, s, isAdmin);
+
     if (!isAdmin) {
       const check = canEditRegistrationServer({ date: String(date).trim(), direction: d });
       if (!check.ok) throw new AppError(check.reason, 403);
@@ -128,9 +147,10 @@ export async function adminCreateRegistration(req, res, next) {
     const d = norm(direction);
     const si = norm(site);
 
-    if (!ALLOWED_SHIFTS.includes(s) || !ALLOWED_DIRECTIONS.includes(d) || !ALLOWED_SITES.includes(si)) {
-      throw new AppError("שדות לא תקינים (בדוק משמרת/סוג/מיקום)", 400);
+    if (!ALLOWED_SHIFTS.includes(s) || !ALLOWED_DIRECTIONS.includes(d)) {
+      throw new AppError("שדות לא תקינים (בדוק משמרת/סוג)", 400);
     }
+    await validateSite(si, s, true); // admin bypass — only checks existence
 
     const target = await User.findById(userId);
     if (!target) throw new AppError("User not found", 404);
@@ -200,7 +220,7 @@ export async function updateRegistration(req, res, next) {
 
       if (k === "site") {
         const v = norm(req.body.site);
-        if (!ALLOWED_SITES.includes(v)) throw new AppError("מיקום לא תקין", 400);
+        await validateSite(v, r.shift, true);
         r.site = v;
       }
     }

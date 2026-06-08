@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Button from "../ui/Button.jsx";
 import { Input } from "../ui/Input.jsx";
 import { Select } from "../ui/Select.jsx";
@@ -15,54 +15,76 @@ import { getSession } from "../../services/auth.service.js";
 import { canEditRegistration, getDeadlineHint } from "../../utils/rules.js";
 
 export default function RegistrationForm({
-    mode = "create", // create | edit
+    mode = "create",
     initial,
     onSubmit,
     onCancel,
     submitLabel,
-    disabledReason, // מיועד בעיקר ל-edit/נעילה חיצונית
+    disabledReason,
+    siteConfigs = [], // [{ _id, key, label, isVisible, shifts: { morning, evening, night } }]
 }) {
     const session = getSession();
     const isAdmin = session?.user?.role === "admin";
 
     const todayYmd = useMemo(() => formatYmd(new Date()), []);
     const [form, setForm] = useState(() => ({
-        date: initial?.date || todayYmd,
-        shift: initial?.shift || SHIFT.MORNING,
+        date:      initial?.date      || todayYmd,
+        shift:     initial?.shift     || SHIFT.MORNING,
         direction: initial?.direction || DIRECTION.PICKUP,
-        site: initial?.site || SITE.RAMBAM,
+        site:      initial?.site      || SITE.RAMBAM,
     }));
 
     const [errors, setErrors] = useState({});
+
+    // Available sites based on config + role
+    const availableSites = useMemo(() => {
+        if (!siteConfigs.length) {
+            return Object.values(SITE).map((k) => ({ key: k, label: SITE_LABEL[k] }));
+        }
+        if (isAdmin || mode === "edit") return siteConfigs;
+        return siteConfigs.filter((s) => s.isVisible);
+    }, [siteConfigs, isAdmin, mode]);
+
+    // Available shifts based on selected site config + role
+    const availableShifts = useMemo(() => {
+        if (!siteConfigs.length || isAdmin || mode === "edit") return Object.values(SHIFT);
+        const siteConf = siteConfigs.find((s) => s.key === form.site);
+        if (!siteConf) return Object.values(SHIFT);
+        return Object.values(SHIFT).filter((s) => siteConf.shifts?.[s] !== false);
+    }, [siteConfigs, form.site, isAdmin, mode]);
+
+    // Auto-reset site if it becomes unavailable
+    useEffect(() => {
+        if (!availableSites.length) return;
+        const valid = availableSites.find((s) => s.key === form.site);
+        if (!valid) setForm((f) => ({ ...f, site: availableSites[0]?.key || SITE.RAMBAM }));
+    }, [availableSites]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Auto-reset shift if it becomes unavailable
+    useEffect(() => {
+        if (!availableShifts.length) return;
+        if (!availableShifts.includes(form.shift)) {
+            setForm((f) => ({ ...f, shift: availableShifts[0] || SHIFT.MORNING }));
+        }
+    }, [availableShifts]); // eslint-disable-line react-hooks/exhaustive-deps
 
     function setField(k, v) {
         setForm((x) => ({ ...x, [k]: v }));
     }
 
-    // ✅ נעילה לעובד בזמן יצירה (לא לאדמין)
     const employeeLock = useMemo(() => {
         if (isAdmin) return { ok: true, reason: "" };
         if (mode !== "create") return { ok: true, reason: "" };
-
-        // “רישום מדומה” בשביל אותו validator
-        const probe = {
-            date: form.date,
-            shift: form.shift,
-            direction: form.direction,
-            site: form.site,
-        };
-
-        return canEditRegistration(probe, new Date()); // { ok, reason }
+        return canEditRegistration({ date: form.date, shift: form.shift, direction: form.direction, site: form.site }, new Date());
     }, [isAdmin, mode, form.date, form.shift, form.direction, form.site]);
 
     function validate() {
         const e = {};
-        if (!form.date) e.date = "חובה לבחור תאריך";
-        if (!form.shift) e.shift = "חובה לבחור משמרת";
+        if (!form.date)      e.date      = "חובה לבחור תאריך";
+        if (!form.shift)     e.shift     = "חובה לבחור משמרת";
         if (!form.direction) e.direction = "חובה לבחור איסוף/פיזור";
-        if (!form.site) e.site = "חובה לבחור מיקום";
+        if (!form.site)      e.site      = "חובה לבחור מיקום";
 
-        // ✅ לעובד: לא מאפשרים רישום למשמרת שעברה/נעולה לפי הכללים
         if (!isAdmin && mode === "create" && !employeeLock.ok) {
             e._form = employeeLock.reason || "לא ניתן להירשם להסעה שכבר עברה";
         }
@@ -77,10 +99,8 @@ export default function RegistrationForm({
         onSubmit?.(form);
     }
 
-    // disabledReason חיצוני (למשל edit נעול) גובר
     const disabled = !!disabledReason || (!isAdmin && mode === "create" && !employeeLock.ok);
-    const topReason =
-        disabledReason || (!isAdmin && mode === "create" ? errors._form || employeeLock.reason : "");
+    const topReason = disabledReason || (!isAdmin && mode === "create" ? errors._form || employeeLock.reason : "");
 
     return (
         <form className="form" onSubmit={submit}>
@@ -108,10 +128,8 @@ export default function RegistrationForm({
                     error={errors.shift}
                     disabled={!!disabledReason}
                 >
-                    {Object.values(SHIFT).map((k) => (
-                        <option key={k} value={k}>
-                            {SHIFT_LABEL[k]}
-                        </option>
+                    {availableShifts.map((k) => (
+                        <option key={k} value={k}>{SHIFT_LABEL[k]}</option>
                     ))}
                 </Select>
             </div>
@@ -125,9 +143,7 @@ export default function RegistrationForm({
                     disabled={!!disabledReason}
                 >
                     {Object.values(DIRECTION).map((k) => (
-                        <option key={k} value={k}>
-                            {DIRECTION_LABEL[k]}
-                        </option>
+                        <option key={k} value={k}>{DIRECTION_LABEL[k]}</option>
                     ))}
                 </Select>
 
@@ -138,10 +154,8 @@ export default function RegistrationForm({
                     error={errors.site}
                     disabled={!!disabledReason}
                 >
-                    {Object.values(SITE).map((k) => (
-                        <option key={k} value={k}>
-                            {SITE_LABEL[k]}
-                        </option>
+                    {availableSites.map((s) => (
+                        <option key={s.key} value={s.key}>{s.label}</option>
                     ))}
                 </Select>
             </div>
@@ -155,9 +169,7 @@ export default function RegistrationForm({
 
                 <div className="actions">
                     {onCancel && (
-                        <Button type="button" onClick={onCancel}>
-                            ביטול
-                        </Button>
+                        <Button type="button" onClick={onCancel}>ביטול</Button>
                     )}
                     <Button type="submit" variant="primary" disabled={disabled}>
                         {submitLabel || (mode === "edit" ? "שמור" : "הרשם")}

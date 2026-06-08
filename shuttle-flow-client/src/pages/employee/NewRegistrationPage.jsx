@@ -8,6 +8,7 @@ import UserComboBox from "../../components/ui/UserComboBox.jsx";
 import { listUsers } from "../../services/users.service.js";
 import { getSession } from "../../services/auth.service.js";
 import { createMyRegistration, adminCreateRegistration } from "../../services/registrations.service.js";
+import { listSiteConfigs } from "../../services/siteConfig.service.js";
 
 export default function NewRegistrationPage() {
   const { toast } = useOutletContext();
@@ -17,6 +18,7 @@ export default function NewRegistrationPage() {
   const [selectedUserId, setSelectedUserId] = useState("");
   const [users, setUsers] = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
+  const [siteConfigs, setSiteConfigs] = useState([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -37,6 +39,7 @@ export default function NewRegistrationPage() {
     }
 
     load();
+    listSiteConfigs().then(setSiteConfigs).catch(() => {});
     return () => {
       cancelled = true;
     };
@@ -93,7 +96,7 @@ export default function NewRegistrationPage() {
         </>
       )}
 
-      <RegistrationForm onSubmit={onSubmit} submitLabel="שמור רישום" />
+      <RegistrationForm onSubmit={onSubmit} submitLabel="שמור רישום" siteConfigs={siteConfigs} />
     </Card>
   );
 }

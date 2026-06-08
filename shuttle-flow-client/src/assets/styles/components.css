@@ -755,3 +755,138 @@
   border-color: #bcd2ff;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, .12);
 }
+
+
+/* ==============================
+   SiteConfig Modal
+   ============================== */
+
+.siteConfigModal {
+  width: min(720px, 100%);
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 18px;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.siteConfigHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.siteConfigLegend {
+  display: grid;
+  grid-template-columns: 1fr 80px 220px 60px;
+  gap: 8px;
+  padding: 0 4px;
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.siteList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.siteRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: #fafbff;
+}
+
+.siteRowConfirm {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  grid-column: 1 / -1;
+}
+
+.siteRowLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.siteRowInput {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 7px 10px;
+  font-size: 14px;
+  background: #fff;
+  outline: none;
+  min-width: 0;
+  width: 160px;
+}
+
+.siteRowInput:focus {
+  border-color: #bcd2ff;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .12);
+}
+
+.siteRowSaveBtn {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+.siteRowControls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.shiftToggleBtn {
+  padding: 6px 10px;
+  font-size: 12px;
+  border-radius: 10px;
+}
+
+.shiftToggleActive {
+  background: var(--primary-weak);
+  border-color: #bfdbfe;
+  color: #1d4ed8;
+}
+
+.shiftToggleOff {
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+  color: var(--muted);
+}
+
+.siteAddForm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.siteAddRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.siteAddRow .siteRowInput {
+  flex: 1;
+  width: auto;
+}
+
+@media (max-width: 600px) {
+  .siteConfigLegend { display: none; }
+  .siteRow { grid-template-columns: 1fr; }
+  .siteRowControls { justify-content: flex-start; }
+}

@@ -5,6 +5,7 @@ import Button from "../../components/ui/Button.jsx";
 import { Input } from "../../components/ui/Input.jsx";
 import { Select } from "../../components/ui/Select.jsx";
 import UserComboBox from "../../components/ui/UserComboBox.jsx";
+import DepartmentComboBox from "../../components/ui/DepartmentComboBox.jsx";
 import { listUsers, createUser, updateUser } from "../../services/users.service.js";
 import { departments } from "../../data/departments.js";
 import { required, validatePhone, validatePassword } from "../../utils/validators.js";
@@ -45,6 +46,7 @@ export default function EditEmployeePage() {
 
   // --- create state ---
   const [createForm, setCreateForm] = useState({ ...EMPTY_CREATE_FORM, department: deps[0] || "" });
+
   const [createErrors, setCreateErrors] = useState({});
   const [createGlobalError, setCreateGlobalError] = useState("");
   const [createLoading, setCreateLoading] = useState(false);
@@ -233,16 +235,12 @@ export default function EditEmployeePage() {
                   error={editErrors.phone}
                   placeholder="05XXXXXXXX"
                 />
-                <Select
-                  label="מחלקה"
+                <DepartmentComboBox
+                  options={deps}
                   value={editForm.department}
-                  onChange={(e) => setEditField("department", e.target.value)}
+                  onChange={(v) => setEditField("department", v)}
                   error={editErrors.department}
-                >
-                  {deps.map((d) => (
-                    <option key={d} value={d}>{d}</option>
-                  ))}
-                </Select>
+                />
               </div>
 
               <Input
@@ -317,12 +315,11 @@ export default function EditEmployeePage() {
               placeholder="05XXXXXXXX"
               autoComplete="tel"
             />
-            <Input
-              label="מחלקה"
+            <DepartmentComboBox
+              options={deps}
               value={createForm.department}
-              onChange={(e) => setCreateField("department", e.target.value)}
+              onChange={(v) => setCreateField("department", v)}
               error={createErrors.department}
-              placeholder="שם המחלקה"
             />
           </div>
 
