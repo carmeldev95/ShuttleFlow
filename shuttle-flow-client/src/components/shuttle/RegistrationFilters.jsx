@@ -1,7 +1,7 @@
 // src/components/shuttle/RegistrationFilters.jsx
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Select } from "../ui/Select.jsx";
-import { SHIFT, SHIFT_LABEL } from "../../utils/constants.js";
+import { SHIFT, SHIFT_LABEL, SITE, SITE_LABEL } from "../../utils/constants.js";
 
 function useDebouncedValue(value, delayMs = 1000) {
   const [debounced, setDebounced] = useState(value);
@@ -24,7 +24,7 @@ function useDebouncedValue(value, delayMs = 1000) {
 }
 
 export default function RegistrationFilters({ value, onChange, debounceMs = 1000 }) {
-  const v = useMemo(() => value || { date: "", shift: "", q: "" }, [value]);
+  const v = useMemo(() => value || { date: "", shift: "", site: "", q: "" }, [value]);
 
   // local input state (debounced UX)
   const [qLocal, setQLocal] = useState(v.q || "");
@@ -46,7 +46,7 @@ export default function RegistrationFilters({ value, onChange, debounceMs = 1000
 
   function clear() {
     setQLocal("");
-    onChange?.({ date: "", shift: "", q: "" });
+    onChange?.({ date: "", shift: "", site: "", q: "" });
   }
 
   return (
@@ -69,6 +69,16 @@ export default function RegistrationFilters({ value, onChange, debounceMs = 1000
         <option value={SHIFT.MORNING}>{SHIFT_LABEL[SHIFT.MORNING]}</option>
         <option value={SHIFT.EVENING}>{SHIFT_LABEL[SHIFT.EVENING]}</option>
         <option value={SHIFT.NIGHT}>{SHIFT_LABEL[SHIFT.NIGHT]}</option>
+      </Select>
+
+      <Select
+        label="מיקום"
+        value={v.site || ""}
+        onChange={(e) => onChange?.({ ...v, site: e.target.value })}
+      >
+        <option value="">הכל</option>
+        <option value={SITE.RAMBAM}>{SITE_LABEL[SITE.RAMBAM]}</option>
+        <option value={SITE.CARMEL}>{SITE_LABEL[SITE.CARMEL]}</option>
       </Select>
 
       <div className="field filterSearch">

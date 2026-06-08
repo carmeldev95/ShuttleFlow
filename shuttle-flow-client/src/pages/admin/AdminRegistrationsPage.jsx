@@ -78,7 +78,7 @@ export default function AdminRegistrationsPage() {
   const session = getSession();
   const isAdmin = session?.user?.role === "admin";
 
-  const [filters, setFilters] = useState({ date: "", shift: "", q: "" });
+  const [filters, setFilters] = useState({ date: "", shift: "", site: "", q: "" });
 
   const [editing, setEditing] = useState(null);
   const [createMode, setCreateMode] = useState(false);
@@ -150,11 +150,15 @@ export default function AdminRegistrationsPage() {
     };
   }, [filters.date, filters.shift, refresh]); // ✅ q לא טוען מחדש מהשרת
 
-  // ✅ חיפוש חופשי = סינון לוקאלי
+  // ✅ חיפוש חופשי + מיקום = סינון לוקאלי
   const filteredRows = useMemo(() => {
     const q = filters.q || "";
-    return (rows || []).filter((r) => rowMatchesQuery(r, q));
-  }, [rows, filters.q]);
+    const site = filters.site || "";
+    return (rows || []).filter((r) => {
+      if (site && r.site !== site) return false;
+      return rowMatchesQuery(r, q);
+    });
+  }, [rows, filters.q, filters.site]);
 
   function openConfirm(opts) {
     setConfirm({

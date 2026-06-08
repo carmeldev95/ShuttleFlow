@@ -5,6 +5,7 @@ import Card from "../../components/ui/Card.jsx";
 import Button from "../../components/ui/Button.jsx";
 import { getSession } from "../../services/auth.service.js";
 import { listRegistrations } from "../../services/registrations.service.js";
+import { listActiveAnnouncements } from "../../services/announcements.service.js";
 
 import { DIRECTION_LABEL, SITE_LABEL } from "../../utils/constants.js";
 import RegistrationCards from "../../components/shuttle/RegistrationCards.jsx";
@@ -62,11 +63,8 @@ export default function DashboardPage() {
 
   const isAdmin = user.role === "admin";
 
-  const [showNotice, setShowNotice] = useState(!isAdmin);
-
-  function closeNotice() {
-    setShowNotice(false);
-  }
+  const [announcements, setAnnouncements] = useState([]);
+  const [showAnnouncements, setShowAnnouncements] = useState(false);
 
   const [all, setAll] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -79,6 +77,18 @@ export default function DashboardPage() {
 
   // ✅ כדי שלא נקפיץ אותה שגיאה שוב ושוב
   const errorShownRef = useRef(false);
+
+  useEffect(() => {
+    if (isAdmin) return;
+    listActiveAnnouncements()
+      .then((items) => {
+        if (items.length > 0) {
+          setAnnouncements(items);
+          setShowAnnouncements(true);
+        }
+      })
+      .catch(() => {});
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     let cancelled = false;
@@ -145,19 +155,20 @@ export default function DashboardPage() {
 
   return (
     <>
-      {showNotice && (
-        <div className="modalOverlay" onClick={closeNotice}>
-          <div className="modalBox modalCard" onClick={(e) => e.stopPropagation()}>
-            <div className="modalTitle" style={{ fontSize: 18, marginBottom: 12 }}>
-              📢 הודעה חשובה
+      {showAnnouncements && announcements.length > 0 && (
+        <div className="modalOverlay" onClick={() => setShowAnnouncements(false)}>
+          <div className="modalCard" style={{ maxWidth: 480 }} onClick={(e) => e.stopPropagation()}>
+            <div className="modalTitle">הודעות מהנהלה</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12, maxHeight: 360, overflowY: "auto" }}>
+              {announcements.map((a) => (
+                <div key={a._id} style={{ borderBottom: "1px solid var(--border)", paddingBottom: 10 }}>
+                  {a.title && <div style={{ fontWeight: 700, marginBottom: 4 }}>{a.title}</div>}
+                  <div style={{ fontSize: 14, lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{a.body}</div>
+                </div>
+              ))}
             </div>
-            <div style={{ fontSize: 15, lineHeight: 1.7, color: "var(--text)" }}>
-              <strong>ההרשמה להסעות במערכת מיועדת כעת לעובדים ברמב״ם בלבד!</strong>
-              <br />
-              רק עובדי רמב״ם יכולים להירשם להסעות בשלב זה.
-            </div>
-            <div className="modalActions" style={{ marginTop: 20 }}>
-              <button className="btn btnPrimary" onClick={closeNotice}>
+            <div className="modalActions" style={{ marginTop: 16 }}>
+              <button className="btn btnPrimary" onClick={() => setShowAnnouncements(false)}>
                 הבנתי, סגור
               </button>
             </div>

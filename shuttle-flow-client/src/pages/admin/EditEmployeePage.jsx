@@ -5,11 +5,21 @@ import Button from "../../components/ui/Button.jsx";
 import { Input } from "../../components/ui/Input.jsx";
 import { Select } from "../../components/ui/Select.jsx";
 import UserComboBox from "../../components/ui/UserComboBox.jsx";
-import { listUsers, updateUser } from "../../services/users.service.js";
+import { listUsers, createUser, updateUser } from "../../services/users.service.js";
 import { departments } from "../../data/departments.js";
 import { required, validatePhone, validatePassword } from "../../utils/validators.js";
 
-const EMPTY_FORM = {
+const EMPTY_EDIT_FORM = {
+  firstName: "",
+  lastName: "",
+  phone: "",
+  department: "",
+  address: "",
+  password: "",
+  role: "employee",
+};
+
+const EMPTY_CREATE_FORM = {
   firstName: "",
   lastName: "",
   phone: "",
@@ -23,33 +33,43 @@ export default function EditEmployeePage() {
   const { toast } = useOutletContext();
   const deps = useMemo(() => departments, []);
 
+  const [mode, setMode] = useState("edit"); // "edit" | "create"
+
+  // --- edit state ---
   const [users, setUsers] = useState([]);
   const [selectedUserId, setSelectedUserId] = useState("");
-  const [form, setForm] = useState(EMPTY_FORM);
-  const [errors, setErrors] = useState({});
-  const [globalError, setGlobalError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [editForm, setEditForm] = useState(EMPTY_EDIT_FORM);
+  const [editErrors, setEditErrors] = useState({});
+  const [editGlobalError, setEditGlobalError] = useState("");
+  const [editLoading, setEditLoading] = useState(false);
+
+  // --- create state ---
+  const [createForm, setCreateForm] = useState({ ...EMPTY_CREATE_FORM, department: deps[0] || "" });
+  const [createErrors, setCreateErrors] = useState({});
+  const [createGlobalError, setCreateGlobalError] = useState("");
+  const [createLoading, setCreateLoading] = useState(false);
 
   useEffect(() => {
     listUsers()
       .then(setUsers)
-      .catch(() => setGlobalError("שגיאה בטעינת רשימת עובדים"));
+      .catch(() => setEditGlobalError("שגיאה בטעינת רשימת עובדים"));
   }, []);
 
-  function setField(k, v) {
-    setForm((x) => ({ ...x, [k]: v }));
-    setErrors((e) => ({ ...e, [k]: undefined }));
+  // ── edit helpers ──
+  function setEditField(k, v) {
+    setEditForm((x) => ({ ...x, [k]: v }));
+    setEditErrors((e) => ({ ...e, [k]: undefined }));
   }
 
   function onUserSelect(userId, userObj) {
     setSelectedUserId(userId);
-    setErrors({});
-    setGlobalError("");
+    setEditErrors({});
+    setEditGlobalError("");
     if (!userObj) {
-      setForm(EMPTY_FORM);
+      setEditForm(EMPTY_EDIT_FORM);
       return;
     }
-    setForm({
+    setEditForm({
       firstName: userObj.firstName || "",
       lastName: userObj.lastName || "",
       phone: userObj.phone || "",
@@ -60,148 +80,276 @@ export default function EditEmployeePage() {
     });
   }
 
-  function validate() {
+  function validateEdit() {
     const e = {};
-    e.firstName = required(form.firstName, "חובה למלא שם פרטי");
-    e.lastName = required(form.lastName, "חובה למלא שם משפחה");
-    e.address = required(form.address, "חובה למלא כתובת");
-    e.department = required(form.department, "חובה לבחור מחלקה");
-    const phoneErr = validatePhone(form.phone);
+    e.firstName = required(editForm.firstName, "חובה למלא שם פרטי");
+    e.lastName = required(editForm.lastName, "חובה למלא שם משפחה");
+    e.address = required(editForm.address, "חובה למלא כתובת");
+    e.department = required(editForm.department, "חובה לבחור מחלקה");
+    const phoneErr = validatePhone(editForm.phone);
     if (phoneErr) e.phone = phoneErr;
-    if (form.password) {
-      e.password = validatePassword(form.password);
-    }
+    if (editForm.password) e.password = validatePassword(editForm.password);
     Object.keys(e).forEach((k) => e[k] == null && delete e[k]);
-    setErrors(e);
+    setEditErrors(e);
     return Object.keys(e).length === 0;
   }
 
-  async function submit(e) {
+  async function submitEdit(e) {
     e.preventDefault();
     if (!selectedUserId) return;
-    setGlobalError("");
-    if (!validate()) return;
+    setEditGlobalError("");
+    if (!validateEdit()) return;
 
     const payload = {
-      firstName: form.firstName.trim(),
-      lastName: form.lastName.trim(),
-      phone: form.phone.trim(),
-      department: form.department.trim(),
-      address: form.address.trim(),
-      role: form.role,
+      firstName: editForm.firstName.trim(),
+      lastName: editForm.lastName.trim(),
+      phone: editForm.phone.trim(),
+      department: editForm.department.trim(),
+      address: editForm.address.trim(),
+      role: editForm.role,
     };
-    if (form.password) payload.password = form.password;
+    if (editForm.password) payload.password = editForm.password;
 
     try {
-      setLoading(true);
-      await updateUser(selectedUserId, payload);
+      setEditLoading(true);
+      const updated = await updateUser(selectedUserId, payload);
       toast?.push({ title: "נשמר בהצלחה", type: "success" });
-      setForm((f) => ({ ...f, password: "" }));
-      // עדכון הרשימה המקומית
-      setUsers((prev) =>
-        prev.map((u) =>
-          u._id === selectedUserId
-            ? { ...u, ...payload }
-            : u
-        )
-      );
+      setEditForm((f) => ({ ...f, password: "" }));
+      setUsers((prev) => prev.map((u) => (u.id === selectedUserId ? { ...u, ...updated } : u)));
     } catch (err) {
-      setGlobalError(err.message || "שגיאה בשמירה");
+      setEditGlobalError(err.message || "שגיאה בשמירה");
     } finally {
-      setLoading(false);
+      setEditLoading(false);
+    }
+  }
+
+  // ── create helpers ──
+  function setCreateField(k, v) {
+    setCreateForm((x) => ({ ...x, [k]: v }));
+    setCreateErrors((e) => ({ ...e, [k]: undefined }));
+  }
+
+  function validateCreate() {
+    const e = {};
+    e.firstName = required(createForm.firstName, "חובה למלא שם פרטי");
+    e.lastName = required(createForm.lastName, "חובה למלא שם משפחה");
+    e.address = required(createForm.address, "חובה למלא כתובת");
+    e.department = required(createForm.department, "חובה לבחור מחלקה");
+    e.password = validatePassword(createForm.password);
+    const phoneErr = validatePhone(createForm.phone);
+    if (phoneErr) e.phone = phoneErr;
+    Object.keys(e).forEach((k) => e[k] == null && delete e[k]);
+    setCreateErrors(e);
+    return Object.keys(e).length === 0;
+  }
+
+  async function submitCreate(e) {
+    e.preventDefault();
+    setCreateGlobalError("");
+    if (!validateCreate()) return;
+
+    const payload = {
+      firstName: createForm.firstName.trim(),
+      lastName: createForm.lastName.trim(),
+      phone: createForm.phone.trim(),
+      department: createForm.department.trim(),
+      address: createForm.address.trim(),
+      password: createForm.password,
+      role: createForm.role,
+    };
+
+    try {
+      setCreateLoading(true);
+      const newUser = await createUser(payload);
+      toast?.push({ title: "העובד נוצר בהצלחה", message: `${newUser.firstName} ${newUser.lastName}` });
+      setCreateForm({ ...EMPTY_CREATE_FORM, department: deps[0] || "" });
+      setUsers((prev) => [newUser, ...prev]);
+    } catch (err) {
+      setCreateGlobalError(err.message || "שגיאה ביצירת עובד");
+    } finally {
+      setCreateLoading(false);
     }
   }
 
   return (
-    <div>
-      <Card title="עריכת פרטי עובד">
-        <div style={{ marginBottom: 16 }}>
-          <UserComboBox
-            label="בחר עובד לעריכה"
-            users={users.filter((u) => u.role !== "admin")}
-            value={selectedUserId}
-            onChange={onUserSelect}
-          />
+    <Card
+      title="ניהול עובדים"
+      right={
+        <div className="row" style={{ gap: 8 }}>
+          <button
+            type="button"
+            className={`btn ${mode === "edit" ? "btnPrimary" : "btnGhost"}`}
+            onClick={() => setMode("edit")}
+          >
+            עריכת עובד
+          </button>
+          <button
+            type="button"
+            className={`btn ${mode === "create" ? "btnPrimary" : "btnGhost"}`}
+            onClick={() => setMode("create")}
+          >
+            הוספת עובד
+          </button>
         </div>
-
-        {selectedUserId && (
-          <form className="form" onSubmit={submit}>
-            {globalError && (
-              <div className="notice noticeDanger" style={{ marginBottom: 12 }}>
-                {globalError}
-              </div>
-            )}
-
-            <div className="grid2">
-              <Input
-                label="שם פרטי"
-                value={form.firstName}
-                onChange={(e) => setField("firstName", e.target.value)}
-                error={errors.firstName}
-              />
-              <Input
-                label="שם משפחה"
-                value={form.lastName}
-                onChange={(e) => setField("lastName", e.target.value)}
-                error={errors.lastName}
-              />
-            </div>
-
-            <div className="grid2">
-              <Input
-                label="טלפון"
-                value={form.phone}
-                onChange={(e) => setField("phone", e.target.value)}
-                error={errors.phone}
-                placeholder="05XXXXXXXX"
-              />
-              <Select
-                label="מחלקה"
-                value={form.department}
-                onChange={(e) => setField("department", e.target.value)}
-                error={errors.department}
-              >
-                {deps.map((d) => (
-                  <option key={d} value={d}>
-                    {d}
-                  </option>
-                ))}
-              </Select>
-            </div>
-
-            <Input
-              label="כתובת מגורים (עיר, רחוב, מספר בית)"
-              value={form.address}
-              onChange={(e) => setField("address", e.target.value)}
-              error={errors.address}
+      }
+    >
+      {mode === "edit" && (
+        <>
+          <div style={{ marginBottom: 16 }}>
+            <UserComboBox
+              label="בחר עובד לעריכה"
+              users={users.filter((u) => u.role !== "admin")}
+              value={selectedUserId}
+              onChange={onUserSelect}
             />
+          </div>
 
-            <div className="grid2">
+          {selectedUserId && (
+            <form className="form" onSubmit={submitEdit}>
+              {editGlobalError && (
+                <div className="notice noticeDanger">{editGlobalError}</div>
+              )}
+
+              <div className="grid2">
+                <Input
+                  label="שם פרטי"
+                  value={editForm.firstName}
+                  onChange={(e) => setEditField("firstName", e.target.value)}
+                  error={editErrors.firstName}
+                />
+                <Input
+                  label="שם משפחה"
+                  value={editForm.lastName}
+                  onChange={(e) => setEditField("lastName", e.target.value)}
+                  error={editErrors.lastName}
+                />
+              </div>
+
+              <div className="grid2">
+                <Input
+                  label="טלפון"
+                  value={editForm.phone}
+                  onChange={(e) => setEditField("phone", e.target.value)}
+                  error={editErrors.phone}
+                  placeholder="05XXXXXXXX"
+                />
+                <Select
+                  label="מחלקה"
+                  value={editForm.department}
+                  onChange={(e) => setEditField("department", e.target.value)}
+                  error={editErrors.department}
+                >
+                  {deps.map((d) => (
+                    <option key={d} value={d}>{d}</option>
+                  ))}
+                </Select>
+              </div>
+
               <Input
-                label="סיסמה חדשה"
-                type="password"
-                value={form.password}
-                onChange={(e) => setField("password", e.target.value)}
-                error={errors.password}
-                placeholder="השאר ריק לאי-שינוי"
-                autoComplete="new-password"
+                label="כתובת מגורים (עיר, רחוב, מספר בית)"
+                value={editForm.address}
+                onChange={(e) => setEditField("address", e.target.value)}
+                error={editErrors.address}
               />
-              <Select
-                label="תפקיד"
-                value={form.role}
-                onChange={(e) => setField("role", e.target.value)}
-              >
-                <option value="employee">עובד</option>
-                <option value="admin">מנהל</option>
-              </Select>
-            </div>
 
-            <Button variant="primary" type="submit" disabled={loading}>
-              {loading ? "שומר..." : "שמור שינויים"}
-            </Button>
-          </form>
-        )}
-      </Card>
-    </div>
+              <div className="grid2">
+                <Input
+                  label="סיסמה חדשה"
+                  type="password"
+                  value={editForm.password}
+                  onChange={(e) => setEditField("password", e.target.value)}
+                  error={editErrors.password}
+                  placeholder="השאר ריק לאי-שינוי"
+                  autoComplete="new-password"
+                />
+                <Select
+                  label="תפקיד"
+                  value={editForm.role}
+                  onChange={(e) => setEditField("role", e.target.value)}
+                >
+                  <option value="employee">עובד</option>
+                  <option value="admin">מנהל</option>
+                </Select>
+              </div>
+
+              <Button variant="primary" type="submit" disabled={editLoading}>
+                {editLoading ? "שומר..." : "שמור שינויים"}
+              </Button>
+            </form>
+          )}
+        </>
+      )}
+
+      {mode === "create" && (
+        <form className="form" onSubmit={submitCreate}>
+          {createGlobalError && (
+            <div className="notice noticeDanger">{createGlobalError}</div>
+          )}
+
+          <div className="grid2">
+            <Input
+              label="שם פרטי"
+              value={createForm.firstName}
+              onChange={(e) => setCreateField("firstName", e.target.value)}
+              error={createErrors.firstName}
+            />
+            <Input
+              label="שם משפחה"
+              value={createForm.lastName}
+              onChange={(e) => setCreateField("lastName", e.target.value)}
+              error={createErrors.lastName}
+            />
+          </div>
+
+          <Input
+            label="כתובת מגורים (עיר, רחוב, מספר בית)"
+            value={createForm.address}
+            onChange={(e) => setCreateField("address", e.target.value)}
+            error={createErrors.address}
+          />
+
+          <div className="grid2">
+            <Input
+              label="טלפון"
+              value={createForm.phone}
+              onChange={(e) => setCreateField("phone", e.target.value)}
+              error={createErrors.phone}
+              placeholder="05XXXXXXXX"
+              autoComplete="tel"
+            />
+            <Input
+              label="מחלקה"
+              value={createForm.department}
+              onChange={(e) => setCreateField("department", e.target.value)}
+              error={createErrors.department}
+              placeholder="שם המחלקה"
+            />
+          </div>
+
+          <div className="grid2">
+            <Input
+              label="סיסמה"
+              type="password"
+              value={createForm.password}
+              onChange={(e) => setCreateField("password", e.target.value)}
+              error={createErrors.password}
+              autoComplete="new-password"
+            />
+            <Select
+              label="תפקיד"
+              value={createForm.role}
+              onChange={(e) => setCreateField("role", e.target.value)}
+            >
+              <option value="employee">עובד</option>
+              <option value="admin">מנהל</option>
+            </Select>
+          </div>
+
+          <Button variant="primary" type="submit" disabled={createLoading}>
+            {createLoading ? "יוצר..." : "צור עובד"}
+          </Button>
+        </form>
+      )}
+    </Card>
   );
 }

@@ -681,3 +681,77 @@
 .btnCsv:active{
   background: #6ee7b7;
 }
+
+
+/* ==============================
+   Announcements admin list
+   ============================== */
+
+.announcementList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.announcementRow {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  background: #fff;
+}
+
+.announcementActive {
+  border-color: #bfdbfe;
+  background: #f6f9ff;
+}
+
+.announcementInactive {
+  opacity: 0.6;
+}
+
+.announcementMeta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.announcementTitle {
+  font-size: 14px;
+}
+
+.announcementBody {
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  margin-bottom: 10px;
+}
+
+.announcementActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.badgeMuted {
+  color: var(--muted);
+}
+
+.textarea {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: #fff;
+  outline: none;
+  resize: vertical;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.textarea:focus {
+  border-color: #bcd2ff;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .12);
+}

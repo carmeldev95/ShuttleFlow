@@ -20,6 +20,39 @@ export const listUsers = asyncHandler(async (_req, res) => {
 });
 
 /**
+ * POST /api/users
+ * Admin only — create a new employee without issuing auth tokens
+ */
+export const createUser = asyncHandler(async (req, res) => {
+  const { firstName, lastName, phone, password, department, address, role } = req.body;
+
+  if (!firstName || !lastName || !phone || !password || !department || !address) {
+    throw new AppError("חסרים שדות חובה", 400);
+  }
+
+  const normalized = normalizePhone(phone);
+  if (!normalized) throw new AppError("מספר טלפון לא תקין", 400);
+  if (String(password).length < 6) throw new AppError("סיסמה קצרה מדי (מינימום 6 תווים)", 400);
+
+  const exists = await User.findOne({ phoneHash: hmacField(normalized) });
+  if (exists) throw new AppError("הטלפון כבר רשום במערכת", 409);
+
+  const user = new User({
+    firstName: String(firstName).trim(),
+    lastName: String(lastName).trim(),
+    phone: normalized,
+    department: String(department).trim(),
+    address: String(address).trim(),
+    role: role && ["employee", "admin"].includes(role) ? role : "employee",
+  });
+
+  await user.setPassword(password);
+  await user.save();
+
+  res.status(201).json({ user: user.toSafeJson() });
+});
+
+/**
  * PATCH /api/users/:id
  * Admin only
  */

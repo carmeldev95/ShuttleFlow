@@ -138,7 +138,7 @@ export default function RegistrationForm({
                     error={errors.site}
                     disabled={!!disabledReason}
                 >
-                    {Object.values(SITE).filter((k) => k !== SITE.CARMEL).map((k) => (
+                    {Object.values(SITE).map((k) => (
                         <option key={k} value={k}>
                             {SITE_LABEL[k]}
                         </option>

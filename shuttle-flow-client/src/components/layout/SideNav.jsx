@@ -36,7 +36,10 @@ export default function SideNav({ role, toast }) {
               ניהול רישומים
             </NavLink>
             <NavLink className={linkClass} to="/employees">
-              עריכת עובדים
+              ניהול עובדים
+            </NavLink>
+            <NavLink className={linkClass} to="/announcements">
+              הודעות לעובדים
             </NavLink>
             <NavLink className={linkClass} to="/reports">
               דוחות
