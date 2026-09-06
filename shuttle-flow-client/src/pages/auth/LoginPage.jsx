@@ -63,8 +63,7 @@ export default function LoginPage() {
                         </div>
 
                         <div className="notice noticeWarning" style={{ marginTop: 8, fontWeight: 700 }}>
-                            שימו לב — ההרשמה במערכת מיועדת כעת לעובדים ברמב״ם בלבד!
-                        </div>
+שימו לב יש ללחוץ על כפתור ההרשמה בכניסה ראשונית ולהרשם למערכת ולאחר מכן להתחבר, אין להשתמש בסיסמא של הארגון.                        </div>
                     </form>
                 </Card>
             </div>

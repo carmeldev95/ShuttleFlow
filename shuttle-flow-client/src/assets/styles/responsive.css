@@ -12,4 +12,35 @@
   .kpiGrid{
     grid-template-columns: 1fr;
   }
+
+  /* Mobile nav: collapse into a hamburger toggle */
+  .sidebarHeader{
+    justify-content: space-between;
+  }
+  .navToggle{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--card);
+    color: var(--text, inherit);
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .navToggle:active{
+    transform: scale(0.96);
+  }
+
+  /* Hidden by default on mobile, revealed when the menu is open */
+  .sidebarBody{
+    display: none;
+  }
+  .sidebar.sidebarOpen .sidebarBody{
+    display: flex;
+  }
 }

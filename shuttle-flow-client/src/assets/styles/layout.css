@@ -26,6 +26,27 @@
   flex-direction: column;
 }
 
+.sidebarHeader{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+/* Collapsible area (user info + nav). On desktop always visible and
+   flexes so the footer sticks to the bottom of the sidebar. */
+.sidebarBody{
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* Hamburger — hidden on desktop, shown on mobile */
+.navToggle{
+  display: none;
+}
+
 .main{
   padding-bottom: 24px;
 }

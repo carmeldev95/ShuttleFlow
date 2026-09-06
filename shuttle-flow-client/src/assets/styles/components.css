@@ -375,6 +375,48 @@
   justify-content: center;
 }
 
+.sideNavHelp{
+  width: 100%;
+  justify-content: center;
+  margin-bottom: 8px;
+  gap: 6px;
+  font-size: clamp(13px, 2.4vw, 15px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 900px){
+  .sideNavHelp{
+    /* On mobile the sidebar is full-width at the top — keep the button compact */
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+}
+
+@media (max-width: 380px){
+  .sideNavHelp{
+    font-size: 13px;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+}
+
+/* driver.js — RTL / Hebrew popover */
+.driver-popover{
+  direction: rtl;
+  text-align: right;
+  font-family: inherit;
+}
+
+.driver-popover-title{
+  font-weight: 900;
+}
+
+.driver-popover-navigation-btns{
+  flex-direction: row-reverse;
+}
+
 
 /* ------------------------------
    Dashboard registration cards

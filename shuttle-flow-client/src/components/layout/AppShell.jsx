@@ -10,6 +10,7 @@ import Brand from "../ui/Brand.jsx";
 export default function AppShell() {
   const [, setTick] = useState(0);
   const refresh = () => setTick((t) => t + 1);
+  const [menuOpen, setMenuOpen] = useState(false);
   const session = getSession();
   const toast = useToast();
 
@@ -20,16 +21,34 @@ export default function AppShell() {
     <>
       <div className="container">
         <div className="shell">
-          <aside className="sidebar">
-            <Brand size={100} />
-            <div className="p" style={{ marginTop: 6 }}>
-              {user.firstName} {user.lastName}
+          <aside className={`sidebar ${menuOpen ? "sidebarOpen" : ""}`}>
+            <div className="sidebarHeader">
+              <Brand size={100} />
+              <button
+                type="button"
+                className="navToggle"
+                onClick={() => setMenuOpen((o) => !o)}
+                aria-label={menuOpen ? "סגור תפריט" : "פתח תפריט"}
+                aria-expanded={menuOpen}
+              >
+                {menuOpen ? "✕" : "☰"}
+              </button>
             </div>
-            <div className="badge">{user.role === "admin" ? "מנהל" : "עובד"}</div>
 
-            <div className="hr" />
+            <div className="sidebarBody">
+              <div className="p" style={{ marginTop: 6 }}>
+                {user.firstName} {user.lastName}
+              </div>
+              <div className="badge">{user.role === "admin" ? "מנהל" : "עובד"}</div>
 
-            <SideNav role={user.role} toast={toast} />
+              <div className="hr" />
+
+              <SideNav
+                role={user.role}
+                toast={toast}
+                onNavigate={() => setMenuOpen(false)}
+              />
+            </div>
           </aside>
 
           <main className="main">
