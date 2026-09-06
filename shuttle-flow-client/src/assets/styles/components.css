@@ -608,6 +608,39 @@
   gap: 10px;
   justify-content: flex-end;
 }
+
+/* Signup success credentials box */
+.credBox{
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg, #f8fafc);
+  padding: 12px;
+  margin-bottom: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.credRow{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.credLabel{
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.credValue{
+  font-weight: 800;
+  font-size: 15px;
+  direction: ltr;
+  unicode-bidi: plaintext;
+  word-break: break-all;
+  text-align: left;
+}
 .colDate{
   min-width: 110px;
   white-space: nowrap;

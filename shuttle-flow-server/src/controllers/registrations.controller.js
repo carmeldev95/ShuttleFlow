@@ -2,6 +2,7 @@
 import { Registration } from "../models/Registration.js";
 import { User } from "../models/User.js";
 import { SiteConfig } from "../models/SiteConfig.js";
+import { RegistrationDaysConfig } from "../models/RegistrationDaysConfig.js";
 import { AppError } from "../utils/errors.js";
 import { encryptField, decryptField } from "../utils/cryptoFields.js";
 import { canEditRegistrationServer } from "../utils/timeRules.js";
@@ -23,6 +24,15 @@ async function validateSite(siteKey, shiftKey, isAdmin) {
     if (shiftKey && siteDoc.shifts?.[shiftKey] === false) {
       throw new AppError(`משמרת ${shiftKey} אינה זמינה במיקום זה`, 403);
     }
+  }
+}
+
+// Employees can register only to open days when the calendar is locked (admins bypass)
+async function validateRegistrationDay(date) {
+  const cfg = await RegistrationDaysConfig.findOne().lean();
+  if (!cfg?.locked) return;
+  if (!(cfg.allowedDates || []).includes(date)) {
+    throw new AppError("הרישום ביומן נעול לתאריך זה. ניתן להירשם רק לימים שנפתחו על ידי מנהל", 403);
   }
 }
 
@@ -100,6 +110,7 @@ export async function createRegistration(req, res, next) {
     await validateSite(si, s, isAdmin);
 
     if (!isAdmin) {
+      await validateRegistrationDay(String(date).trim());
       const check = canEditRegistrationServer({ date: String(date).trim(), direction: d });
       if (!check.ok) throw new AppError(check.reason, 403);
     }
@@ -204,7 +215,11 @@ export async function updateRegistration(req, res, next) {
     for (const k of allowed) {
       if (!(k in req.body)) continue;
 
-      if (k === "date") r.date = String(req.body.date).trim();
+      if (k === "date") {
+        const v = String(req.body.date).trim();
+        if (!isAdmin && v !== r.date) await validateRegistrationDay(v);
+        r.date = v;
+      }
 
       if (k === "shift") {
         const v = norm(req.body.shift);

@@ -18,6 +18,7 @@ import {
 } from "../../services/registrations.service.js";
 import { listSiteConfigs } from "../../services/siteConfig.service.js";
 import SiteConfigModal from "../../components/shuttle/SiteConfigModal.jsx";
+import RegistrationDaysModal from "../../components/shuttle/RegistrationDaysModal.jsx";
 
 function ConfirmModal({
   open,
@@ -96,6 +97,7 @@ export default function AdminRegistrationsPage() {
   const [refresh, setRefresh] = useState(0);
   const [siteConfigs, setSiteConfigs] = useState([]);
   const [showSiteConfig, setShowSiteConfig] = useState(false);
+  const [showDaysConfig, setShowDaysConfig] = useState(false);
 
   const [confirm, setConfirm] = useState({
     open: false,
@@ -263,11 +265,22 @@ export default function AdminRegistrationsPage() {
         />
       )}
 
+      {showDaysConfig && (
+        <RegistrationDaysModal onClose={() => setShowDaysConfig(false)} />
+      )}
+
       <Card
         title="ניהול רישומים"
         subtitle="צפייה, עריכה וביטול רישומי עובדים (לאדמין אין נעילה)"
         right={
           <div className="row" style={{ gap: 8 }}>
+            <button
+              className="btn btnGhost"
+              type="button"
+              onClick={() => setShowDaysConfig(true)}
+            >
+              ניהול ימי רישום
+            </button>
             <button
               className="btn btnGhost"
               type="button"

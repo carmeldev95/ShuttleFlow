@@ -8,6 +8,7 @@ import { departments } from "../../data/departments.js";
 import { signup } from "../../services/auth.service.js";
 import { required, validatePhone, validatePassword } from "../../utils/validators.js";
 import Brand from "../../components/ui/Brand.jsx";
+import SignupSuccessModal from "../../components/auth/SignupSuccessModal.jsx";
 
 export default function SignupPage() {
   const nav = useNavigate();
@@ -26,6 +27,8 @@ export default function SignupPage() {
   const [errors, setErrors] = useState({});
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [createdUser, setCreatedUser] = useState(null);
+  const [createdPassword, setCreatedPassword] = useState("");
 
   function setField(k, v) {
     setForm((x) => ({ ...x, [k]: v }));
@@ -63,8 +66,9 @@ export default function SignupPage() {
 
     try {
       setLoading(true);
-      await signup(payload);              
-      nav("/", { replace: true });
+      const user = await signup(payload);
+      setCreatedUser(user);
+      setCreatedPassword(payload.password);
     } catch (err) {
       setError(err.message || "שגיאה בהרשמה");
     } finally {
@@ -74,6 +78,14 @@ export default function SignupPage() {
 
   return (
     <div className="authShell">
+      {createdUser && (
+        <SignupSuccessModal
+          user={createdUser}
+          password={createdPassword}
+          onClose={() => nav("/", { replace: true })}
+        />
+      )}
+
       <div className="authCard">
         <Card subtitle="הרשמה למערכת" right={<span className="badge">sign up</span>}>
           <Brand size={200} />

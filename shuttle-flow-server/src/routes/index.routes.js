@@ -5,6 +5,7 @@ import { usersRoutes } from "./users.routes.js";
 import { registrationsRoutes } from "./registrations.routes.js";
 import { announcementsRoutes } from "./announcements.routes.js";
 import { siteConfigRoutes } from "./siteConfig.routes.js";
+import { registrationDaysRoutes } from "./registrationDays.routes.js";
 
 export const indexRoutes = Router();
 
@@ -16,3 +17,4 @@ indexRoutes.use("/users", usersRoutes);
 indexRoutes.use("/registrations", registrationsRoutes);
 indexRoutes.use("/announcements", announcementsRoutes);
 indexRoutes.use("/site-config", siteConfigRoutes);
+indexRoutes.use("/registration-days", registrationDaysRoutes);

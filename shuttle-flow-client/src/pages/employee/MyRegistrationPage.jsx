@@ -7,6 +7,7 @@ import RegistrationForm from "../../components/shuttle/RegistrationForm.jsx";
 import RegistrationTable from "../../components/shuttle/RegistrationTable.jsx";
 
 import { deleteRegistration, listRegistrations, updateRegistration } from "../../services/registrations.service.js";
+import { getRegistrationDays } from "../../services/registrationDays.service.js";
 import { canEditRegistration } from "../../utils/rules.js";
 
 export default function MyRegistrationsPage() {
@@ -17,6 +18,11 @@ export default function MyRegistrationsPage() {
   const [loading, setLoading] = useState(false);
 
   const [refresh, setRefresh] = useState(0);
+  const [daysConfig, setDaysConfig] = useState(null);
+
+  useEffect(() => {
+    getRegistrationDays().then(setDaysConfig).catch(() => {});
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -91,6 +97,7 @@ export default function MyRegistrationsPage() {
             onSubmit={onSave}
             onCancel={() => setEditing(null)}
             submitLabel="שמור"
+            daysConfig={daysConfig}
             disabledReason={(() => {
               const lock = canEditRegistration(editing, new Date());
               return lock.ok ? "" : lock.reason;
