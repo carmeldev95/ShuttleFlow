@@ -30,7 +30,7 @@ export default function RegistrationForm({
     submitLabel,
     disabledReason,
     siteConfigs = [], // [{ _id, key, label, isVisible, shifts: { morning, evening, night } }]
-    daysConfig = null, // { locked, allowedDates: ["YYYY-MM-DD"] }
+    daysConfig = null, // { locked, allowedDays: [{ date, shifts, closedSites }] }
 }) {
     const session = getSession();
     const realAdmin = session?.user?.role === "admin";
@@ -50,32 +50,61 @@ export default function RegistrationForm({
 
     const [errors, setErrors] = useState({});
 
-    // Available sites based on config + role
+    // Locked calendar for employees: only admin-opened days/shifts/sites are selectable
+    const dayLocked = !isAdmin && !!daysConfig?.locked;
+    const allowedDays = daysConfig?.allowedDays || [];
+
+    const availableDates = useMemo(() => {
+        if (!dayLocked) return null;
+        // Hide days where every shift is closed — nothing is registerable that day
+        const hasOpenShift = (d) => Object.values(SHIFT).some((s) => d.shifts?.[s]?.open !== false);
+        const list = allowedDays.filter(hasOpenShift).map((d) => d.date);
+        // In edit mode, keeping the original date is always allowed
+        if (mode === "edit" && initial?.date && !list.includes(initial.date)) list.push(initial.date);
+        return list.slice().sort();
+    }, [dayLocked, daysConfig, mode, initial?.date]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    const selectedDay = useMemo(
+        () => allowedDays.find((d) => d.date === form.date) || null,
+        [daysConfig, form.date] // eslint-disable-line react-hooks/exhaustive-deps
+    );
+
+    // Available sites based on config + role + per-day lock
     const availableSites = useMemo(() => {
         if (!siteConfigs.length) {
             return Object.values(SITE).map((k) => ({ key: k, label: SITE_LABEL[k] }));
         }
         if (isAdmin || mode === "edit") return siteConfigs;
-        return siteConfigs.filter((s) => s.isVisible);
-    }, [siteConfigs, isAdmin, mode]);
+        let list = siteConfigs.filter((s) => s.isVisible);
+        if (dayLocked && selectedDay) {
+            const closed = selectedDay.closedSites || [];
+            list = list.filter((s) => !closed.includes(s.key));
+        }
+        return list;
+    }, [siteConfigs, isAdmin, mode, dayLocked, selectedDay]);
 
-    // Available shifts based on selected site config + role
+    // Available shifts based on selected site config + role + per-day lock
     const availableShifts = useMemo(() => {
         if (!siteConfigs.length || isAdmin || mode === "edit") return Object.values(SHIFT);
         const siteConf = siteConfigs.find((s) => s.key === form.site);
-        if (!siteConf) return Object.values(SHIFT);
-        return Object.values(SHIFT).filter((s) => siteConf.shifts?.[s] !== false);
-    }, [siteConfigs, form.site, isAdmin, mode]);
+        let list = Object.values(SHIFT);
+        if (siteConf) list = list.filter((s) => siteConf.shifts?.[s] !== false);
+        if (dayLocked && selectedDay?.shifts) {
+            list = list.filter((s) => selectedDay.shifts[s]?.open !== false);
+        }
+        return list;
+    }, [siteConfigs, form.site, isAdmin, mode, dayLocked, selectedDay]);
 
-    // Locked calendar for employees: only admin-opened days are selectable
-    const dayLocked = !isAdmin && !!daysConfig?.locked;
-    const availableDates = useMemo(() => {
-        if (!dayLocked) return null;
-        const list = (daysConfig?.allowedDates || []).slice();
-        // In edit mode, keeping the original date is always allowed
-        if (mode === "edit" && initial?.date && !list.includes(initial.date)) list.push(initial.date);
-        return list.sort();
-    }, [dayLocked, daysConfig, mode, initial?.date]);
+    // Available directions based on role + the selected shift's per-day lock
+    const availableDirections = useMemo(() => {
+        if (isAdmin || mode === "edit") return Object.values(DIRECTION);
+        let list = Object.values(DIRECTION);
+        const shiftDirs = dayLocked ? selectedDay?.shifts?.[form.shift]?.directions : null;
+        if (shiftDirs) {
+            list = list.filter((d) => shiftDirs[d] !== false);
+        }
+        return list;
+    }, [isAdmin, mode, dayLocked, selectedDay, form.shift]);
 
     // Auto-reset date to the first open day if the current one is closed
     useEffect(() => {
@@ -84,6 +113,14 @@ export default function RegistrationForm({
             setForm((f) => ({ ...f, date: availableDates[0] }));
         }
     }, [availableDates]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Auto-reset direction if it becomes unavailable
+    useEffect(() => {
+        if (!availableDirections.length) return;
+        if (!availableDirections.includes(form.direction)) {
+            setForm((f) => ({ ...f, direction: availableDirections[0] || DIRECTION.PICKUP }));
+        }
+    }, [availableDirections]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Auto-reset site if it becomes unavailable
     useEffect(() => {
@@ -110,13 +147,26 @@ export default function RegistrationForm({
         return canEditRegistration({ date: form.date, shift: form.shift, direction: form.direction, site: form.site }, new Date());
     }, [isAdmin, mode, form.date, form.shift, form.direction, form.site]);
 
-    // Locked calendar: employees can only pick dates the admin opened
+    // Locked calendar: employees can only pick open days + open shift/site for that day
     const dayLock = useMemo(() => {
         if (isAdmin || !daysConfig?.locked) return { ok: true, reason: "" };
         if (mode === "edit" && form.date === initial?.date) return { ok: true, reason: "" };
-        if ((daysConfig.allowedDates || []).includes(form.date)) return { ok: true, reason: "" };
-        return { ok: false, reason: "הרישום ביומן נעול לתאריך זה. ניתן להירשם רק לימים שנפתחו על ידי מנהל" };
-    }, [isAdmin, mode, daysConfig, form.date, initial?.date]);
+        const day = allowedDays.find((d) => d.date === form.date);
+        if (!day) {
+            return { ok: false, reason: "הרישום ביומן נעול לתאריך זה. ניתן להירשם רק לימים שנפתחו על ידי מנהל" };
+        }
+        const sh = day.shifts?.[form.shift];
+        if (!sh || sh.open === false) {
+            return { ok: false, reason: "משמרת זו אינה פתוחה לרישום בתאריך שנבחר" };
+        }
+        if (sh.directions?.[form.direction] === false) {
+            return { ok: false, reason: "סוג הנסיעה (איסוף/פיזור) אינו פתוח למשמרת זו בתאריך שנבחר" };
+        }
+        if ((day.closedSites || []).includes(form.site)) {
+            return { ok: false, reason: "מיקום זה אינו פתוח לרישום בתאריך שנבחר" };
+        }
+        return { ok: true, reason: "" };
+    }, [isAdmin, mode, daysConfig, form.date, form.shift, form.direction, form.site, initial?.date]);
 
     function validate() {
         const e = {};
@@ -238,7 +288,7 @@ export default function RegistrationForm({
                     error={errors.direction}
                     disabled={!!disabledReason}
                 >
-                    {Object.values(DIRECTION).map((k) => (
+                    {availableDirections.map((k) => (
                         <option key={k} value={k}>{DIRECTION_LABEL[k]}</option>
                     ))}
                 </Select>

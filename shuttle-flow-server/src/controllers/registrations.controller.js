@@ -2,7 +2,7 @@
 import { Registration } from "../models/Registration.js";
 import { User } from "../models/User.js";
 import { SiteConfig } from "../models/SiteConfig.js";
-import { RegistrationDaysConfig } from "../models/RegistrationDaysConfig.js";
+import { RegistrationDaysConfig, normalizeAllowedDays } from "../models/RegistrationDaysConfig.js";
 import { AppError } from "../utils/errors.js";
 import { encryptField, decryptField } from "../utils/cryptoFields.js";
 import { canEditRegistrationServer } from "../utils/timeRules.js";
@@ -27,12 +27,24 @@ async function validateSite(siteKey, shiftKey, isAdmin) {
   }
 }
 
-// Employees can register only to open days when the calendar is locked (admins bypass)
-async function validateRegistrationDay(date) {
+// Employees can register only to open days/shifts/directions/sites when the calendar is locked (admins bypass)
+async function validateRegistrationDay(date, shift, site, direction) {
   const cfg = await RegistrationDaysConfig.findOne().lean();
   if (!cfg?.locked) return;
-  if (!(cfg.allowedDates || []).includes(date)) {
+
+  const day = normalizeAllowedDays(cfg).find((d) => d.date === date);
+  if (!day) {
     throw new AppError("הרישום ביומן נעול לתאריך זה. ניתן להירשם רק לימים שנפתחו על ידי מנהל", 403);
+  }
+  const shiftCfg = shift ? day.shifts?.[shift] : null;
+  if (shift && (!shiftCfg || shiftCfg.open === false)) {
+    throw new AppError("משמרת זו אינה פתוחה לרישום בתאריך שנבחר", 403);
+  }
+  if (shift && direction && shiftCfg?.directions?.[direction] === false) {
+    throw new AppError("סוג הנסיעה (איסוף/פיזור) אינו פתוח למשמרת זו בתאריך שנבחר", 403);
+  }
+  if (site && (day.closedSites || []).includes(site)) {
+    throw new AppError("מיקום זה אינו פתוח לרישום בתאריך שנבחר", 403);
   }
 }
 
@@ -110,7 +122,7 @@ export async function createRegistration(req, res, next) {
     await validateSite(si, s, isAdmin);
 
     if (!isAdmin) {
-      await validateRegistrationDay(String(date).trim());
+      await validateRegistrationDay(String(date).trim(), s, si, d);
       const check = canEditRegistrationServer({ date: String(date).trim(), direction: d });
       if (!check.ok) throw new AppError(check.reason, 403);
     }
@@ -215,11 +227,7 @@ export async function updateRegistration(req, res, next) {
     for (const k of allowed) {
       if (!(k in req.body)) continue;
 
-      if (k === "date") {
-        const v = String(req.body.date).trim();
-        if (!isAdmin && v !== r.date) await validateRegistrationDay(v);
-        r.date = v;
-      }
+      if (k === "date") r.date = String(req.body.date).trim();
 
       if (k === "shift") {
         const v = norm(req.body.shift);
@@ -238,6 +246,11 @@ export async function updateRegistration(req, res, next) {
         await validateSite(v, r.shift, true);
         r.site = v;
       }
+    }
+
+    // Employees editing date/shift/direction/site must respect the locked calendar
+    if (!isAdmin && ["date", "shift", "direction", "site"].some((k) => k in req.body)) {
+      await validateRegistrationDay(r.date, r.shift, r.site, r.direction);
     }
 
     await r.save();

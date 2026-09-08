@@ -938,9 +938,85 @@
 }
 
 .shiftToggleOff {
-  background: #f1f5f9;
+  background: lightgray;
   border-color: #e2e8f0;
+  color: white;
+}
+
+/* Per-day registration config row */
+.dayRow {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dayRowHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.dayRowDate {
+  font-weight: 800;
+}
+
+.dayRowSection {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.dayShiftsWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dayShiftBlock {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dayShiftClosed {
+  background: #f8fafc;
+}
+
+.dayShiftHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dayShiftState {
+  font-size: 12px;
   color: var(--muted);
+  font-weight: 700;
+}
+
+.dayShiftDirections {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-inline-start: 6px;
+  border-inline-start: 2px solid var(--border);
+}
+
+.dayRowLabel {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  min-width: 66px;
 }
 
 .siteAddForm {
